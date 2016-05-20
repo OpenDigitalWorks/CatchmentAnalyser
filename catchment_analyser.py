@@ -27,7 +27,8 @@ import resources
 # Import the code for the dialog
 from catchment_analyser_dialog import CatchmentAnalyserDialog
 import os.path
-
+# Import tool classes
+import catchment_tools
 
 class CatchmentAnalyser:
     """QGIS Plugin Implementation."""
