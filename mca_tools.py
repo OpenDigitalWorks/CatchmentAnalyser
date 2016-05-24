@@ -56,7 +56,7 @@ def graph_builder(network_lines, origin_points, origins_column, tolerance,custom
 	# Connect origin points to the director and build graph
 	tied_origins = director.makeGraph(builder, origins)
 	graph = builder.graph()
-	print origins_name
+
 	return graph, tied_origins, origins_name
 
 
