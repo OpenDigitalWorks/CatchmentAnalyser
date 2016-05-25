@@ -44,8 +44,11 @@ class catchment_tools():
         unlink_buffer = 5
 
         # Variables
-        network = []
+        network = [] # Final list of network lines
+        segment_index = QgsSpatialIndex() # Index of segment bounding boxes
+        segment_dict = {} # Dictionary of segments indices and geometries
         unlinked_segments_ids = []
+        origin_type = None # Origins can be point or polygon
 
         # Check network layer validity
         if not network_vector.isValid():
@@ -79,47 +82,65 @@ class catchment_tools():
                 # If network is not topological start segmentation
                 if topology_bool == True:
 
-                    # Create spatial index
-                    segment_index = QgsSpatialIndex()
+                    # Insert segments of network to the spatial index and dictionary
+                    for segment in network_vector.getFeatures():
+                        segment_index.insertFeature(segment)
+                        segment_dict[segment.id()] = segment.geometry().asWkb()
 
-                    # Loop through segments
+                    # Loop through unlinks and list unlinked segments
+                    for unlink in unlink_vector.getFeatures():
+
+                        # Create unlink area when unlinks are points
+                        if origin_type = 'point':
+                            unlink_area = unlink.geometry().buffer(unlink_buffer,5)
+
+                        # Create unlink area when unlinks are polygons
+                        else:
+                            unlink_area = unlink.geometry().boundingBox()
+
+                        # Create list of id's of intersecting segments
+                        nearest_segments = segment_index.intersects(unlink_area)
+
+                        # Check number of intersecting segments
+                        if nearest_segments > 2:
+                            self.warning_message("Unlink layer references to many segments!")
+
+                        # Add unlinked segments to the list
+                        else:
+                             for seg_id in nearest_segments:
+                                 unlinked_segments_ids.append(seg_id)
+
+                    # Insert segments of network to the spatial index
                     for segment in network_vector.getFeatures():
 
-                        # Insert segments of network to the spatial index
-                        segment_index.insertFeature(segment)
+                        segment_id = segment.id()
+                        segment_geom = segment.geometry()
 
-                        # Loop through unlinks
-                        for unlink in unlink_vector.getFeatures():
+                        # Add unlinked segments to the network
+                        if segment_id in unlinked_segments_ids:
+                            network.append(segment_geom)
 
-                            # Create unlink area when unlinks are points
-                            if origin_type = 'point':
-                                unlink_area = unlink.geometry().buffer(unlink_buffer,5)
+                        # Split the remaining segments
+                        else:
 
-                            # Create unlink area when unlinks are polygons
-                            else:
-                                unlink_area = unlink.geometry().boundingBox()
+                            # Calculate segment length
+                            segment_length = segment_geom.length()
 
-                            # Create list of id's of intersecting segments
-                            nearest_segments = segment_index.intersects(unlink_area)
+                            # Identify intersecting segments
+                            intersecting_segments = []
+                            intersecting_segments_ids = segment_index.intersects(segment_geom)
+                            inte
 
-                            # Check number of intersecting segments
-                            if nearest_segments > 2:
-                                self.warning_message("Unlink layer references to many segments!")
+                            # Loop for segment parts excluding itself
+                            for id in [i for i in nearest_segments if i != segment_id]:
 
-                            # Add unlinked segments to the list
-                            else:
-                                unlinked_segments_ids.append(seg_id) for seg_id in nearest_segments
+                                # Loop through segment parts
 
-                        # Calculate segment length
-                        segment_length = segment.geometry().length()
 
-                        # Split segment
-                        if segment.id() in unlinked_segments_ids:
-                            network.append(segment.geometry())
-
-                        # Loop for segment parts
-
-                            # Only append non-stubs based on stub ratio
+                                # Loop for segment parts
+                                if
+                            intersecting_segments = QgsGeometry()
+                                # Only append non-stubs based on stub ratio
 
                 # Otherwise add all segments of the network layer
                 else:
@@ -131,15 +152,21 @@ class catchment_tools():
 
         # Variables
 
+		# Check origins validity
+		
+		# Check if origins are polygons
+		
+			# Get points from polygon
 
-        # Check origin layer validity
+		# Combining points with their name
 
-        # Check if origin layer is a polygon
-
-            # Generate edge points
-
-        return origin_points
-
+			# Use designated field
+			
+			# Use number
+		
+		return origin_points
+		
+		
     def graph_builder(self,network,cost_field, origin):
 
         # Settings
