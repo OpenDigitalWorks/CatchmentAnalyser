@@ -38,7 +38,7 @@ class catchment_tools():
         self.cost = None
         self.origin_name = None
 
-    def network_preparation(self, network_vector, topology_bool, stub_ratio, unlink_vector,):
+    def network_preparation(self, network_vector, topology_bool, stub_ratio, unlink_vector):
 
         # Settings
         unlink_buffer = 5
@@ -110,11 +110,17 @@ class catchment_tools():
                              for seg_id in nearest_segments:
                                  unlinked_segments_ids.append(seg_id)
 
-                    # Insert segments of network to the spatial index
+                    # Loop through the segments
                     for segment in network_vector.getFeatures():
 
+                        # Get id and geometry and length from segment
                         segment_id = segment.id()
                         segment_geom = segment.geometry()
+                        segment_length = segment_geom.length()
+
+                        # Get points from original segment
+                        seg_start_point = segment_geom.asPolyline()[0]
+                        seg_end_point = segment_geom.asPolyline()[-1]
 
                         # Add unlinked segments to the network
                         if segment_id in unlinked_segments_ids:
@@ -123,26 +129,54 @@ class catchment_tools():
                         # Split the remaining segments
                         else:
 
-                            # Calculate segment length
-                            segment_length = segment_geom.length()
-
                             # Identify intersecting segments
-                            intersecting_segments = []
-                            intersecting_segments_ids = segment_index.intersects(segment_geom)
-                            inte
+                            intersecting_segments_ids = segment_index.intersects(segment_geom.boundingBox())
 
-                            # Loop for segment parts excluding itself
-                            for id in [i for i in nearest_segments if i != segment_id]:
+                            # Loop for intersecting segments excluding itself
+                            for id in [i for i in intersecting_segments_ids if i != segment_id]:
 
-                                # Loop through segment parts
+                                # Get geometry of intersecting segment
+                                int_seg_geom = QgsGeometry()
+                                int_seg_geom.fromWkb(segment_dict[id])
 
+                                # Identify all construction points of the new segments
+                                if segment_geom.crosses(int_seg_geom):
 
-                                # Loop for segment parts
-                                if
-                            intersecting_segments = QgsGeometry()
-                                # Only append non-stubs based on stub ratio
+                                    # Break points of intersecting lines sorted according to distance to start point
+                                    break_points = segment_geom.intersection(int_seg_geom).asGeometryCollection()
+                                    break_points.sort(key=lambda x: QgsDistanceArea().measureLine(seg_start_point,x))
 
-                # Otherwise add all segments of the network layer
+                                elif segment_geom.touches(int_seg_geom):
+
+                                    # End points of touching lines sorted according to distance to start point
+                                    touch_points = segment_geom.intersection(int_seg_geom).asGeometryCollection()
+                                    break_points.sort(key=lambda x: QgsDistanceArea().measureLine(seg_start_point, x))
+
+                            # Check if first segment is a potential stub
+                            if not seg_start_point in touch_points:
+                                distance_nearest_break = QgsDistanceArea().measureLine(seg_start_point,break_points[0])
+
+                                # Only add first segment if it is a dead end
+                                if distance_nearest_break > (stub_ratio * segment_length):
+                                    network.append(QgsGeometry.asPolyline(seg_start_point,break_points[0]))
+
+                            # Check if last segment is a potential stub
+                            elif not seg_end_point in touch_points:
+                                distance_nearest_break = QgsDistanceArea().measureLine(seg_end_point, break_points[-1])
+
+                                # Only add last segment if it is a dead end
+                                if distance_nearest_break > (stub_ratio * segment_length):
+                                    network.append(QgsGeometry.asPolyline(seg_start_point, break_points[0]))
+
+                            # Add the remaining segments
+                            else:
+                                for i,pt in enumerate(break_points):
+
+                                    # Create and append segments up to last break point
+                                    if i < len(break_points):
+                                        network.append(QgsGeometry.asPolyline(break_points[i],break_points[i+1]))
+
+                # If topological network add all segments of the network layer
                 else:
                     network.append(segment.geometry() for segment in network_vector.getFeatures())
 
