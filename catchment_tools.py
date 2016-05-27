@@ -38,7 +38,7 @@ class catchment_tools():
         self.cost = None
         self.origin_name = None
 
-    def network_preparation(self, network_vector, topology_bool, stub_ratio, unlink_vector):
+    def network_preparation(self, network_vector, unlink_vector, topology_bool, stub_ratio):
 
         # Settings
         unlink_buffer = 5
@@ -76,7 +76,7 @@ class catchment_tools():
                 # Check unlink geometry type
                 if (unlink_vector.wkbType() == 1 or unlink_vector.wkbType() == 4):
                     origin_type = 'point'
-                elif (unlink_vector.wkbType() == 1 or unlink_vector.wkbType() == 4):
+                elif (unlink_vector.wkbType() == 3 or unlink_vector.wkbType() == 6):
                     origin_type = 'polygon'
 
                 # If network is not topological start segmentation
@@ -91,7 +91,7 @@ class catchment_tools():
                     for unlink in unlink_vector.getFeatures():
 
                         # Create unlink area when unlinks are points
-                        if origin_type = 'point':
+                        if origin_type == 'point':
                             unlink_area = unlink.geometry().buffer(unlink_buffer,5)
 
                         # Create unlink area when unlinks are polygons
@@ -182,81 +182,122 @@ class catchment_tools():
 
         return network
 
-    def origin_preparation(self, origin_layer):
+    def origin_preparation(self, origin_vector, origin_name_field):
 
-        # Variables
+        # Create a list of origin point dictionaries containing name and geometry
+        origin_points = []
 
-		# Check origins validity
-		
-		# Check if origins are polygons
-		
-			# Get points from polygon
+        # Check origin layer validity
+        if not origin_vector.isValid():
+            self.warning_message("Invalid origin layer!")
 
-		# Combining points with their name
+        else:
 
-			# Use designated field
-			
-			# Use number
-		
-		return origin_points
-		
-		
-    def graph_builder(self,network,cost_field, origin):
+            # Check origin layer geometry
+            if  origin_vector.wkbType() == 7:
+                self.warning_message("Invalid origin geometry!")
+
+            # Loop through origin and get or create points
+            for i,f in enumerate(origin_vector.getFeatures()):
+
+                # Create origin dictionary
+                origin = {}
+
+                # If origin name field is given get name
+                if origin_name_field:
+                    origin_name = f[origin_name_field]
+
+                # Otherwise use index as name
+                else:
+                    origin_name = i
+
+                # Depending on type of origin create and append points
+                if f.vectorType() == Qgis.Point:
+                    origin[i] = {origin[origin_name] : f.geometry()}
+
+                elif f.vectorType() == Qgis.Polygon or f.vectorType() == Qgis.Line:
+                    origin[i] = {origin[origin_name]: f.geometry().centroid()}
+
+                # Append origin names and geometry to origin points list
+                origin_points.append(origin)
+
+            return origins
+
+    def graph_builder(self,network, cost_field, origins, tolerance):
 
         # Settings
-        crs = network.crs()
-        epsg = crs.authid()
+        network_crs = network.crs()
+        network_epsg = network_crs.authid()
         otf = False
-        network_fields = network_lines.pendingFields()
+        network_fields = network.pendingFields()
         custom_cost_index = network_fields.indexFromName(cost_field)
 
         # Setting up graph build director
-        director = QgsLineVectorLayerDirector(network_lines, -1, '', '', '', 3)
+        director = QgsLineVectorLayerDirector(network, -1, '', '', '', 3)
 
         # Determining cost calculation
-        if custom_cost == True:
+        if cost_field == True:
             properter = customCost(custom_cost_index,0)
         else:
             properter = QgsDistanceArcProperter()
 
         # Building graph
         director.addProperter(properter)
-        builder = QgsGraphBuilder(crs, otf, tolerance, epsg)
+        builder = QgsGraphBuilder(network_crs, otf, tolerance, network_epsg)
 
         # Reading origins and making list of coordinates
-        origins = []
-        origins_name = {}
-        for i,f in enumerate(origin_points.getFeatures()):
-            geom = f.geometry().asPoint()
-            origins.append(geom)
-            if origins_column:
-                origins_name[i] = f[origins_column]
+        graph_origin_points = []
 
-        # Connect origin points to the director and build graph
-        tied_origins = director.makeGraph(builder, origins)
+        # Loop through the origin points and add graph vertex indices
+        for index,origin in enumerate(origins):
+            graph_origin_points.append(origin[index][name])
+
+        # Get origin graph vertex index
+        tied_origins = director.makeGraph(builder, graph_origin_points)
+
+        # Build the graph
         graph = builder.graph()
 
         return graph, tied_origins
 
-    def ca_analysis(self, graph, tied_origins):
+    def ca_line_analysis(self, graph, tied_origins):
 
-        ca_network = []
+        # Variables
+        catchment_network = []
+        catchment_points = []
 
+        line_dict = {id : 0, geom : [], cost : []}
+        polygon_dict = {origin : [{radius : []}]}
 
+        # Loop through tied origins
 
-    def ca_polygon_builder(self):
+        return catchment_network, catchment_points
+
+    def ca_polygon_analysis(self, polygon_points):
+
+        return polygon
+
+    def ca_network_writer(self, catchment_network, output_network):
         pass
 
-    def ca_network_writer(self):
+    def ca_polygon_writer(self, catchment_points, radii, output_polygon):
+
+        # Loop through origins
+
+            # Loop through radii
+
+                # Run polygon analysis
+
+        # Collapse per origin
+
+        # In case of polygon origins overwrite results of lines in origin with 0
+
         pass
 
-    def ca_polygon_writer(self):
+    def ca_network_renderer(self, output_network):
         pass
 
-    def ca_network_renderer(self):
-        pass
-
-    def ca_polygon_renderer(self):
+    def ca_polygon_renderer(self, output_polygon):
         pass
 
     def warning_message(self,message):
