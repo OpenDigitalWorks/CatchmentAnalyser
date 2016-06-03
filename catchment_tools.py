@@ -80,7 +80,7 @@ class catchment_tools():
                     origin_type = 'polygon'
 
                 # If network is not topological start segmentation
-                if topology_bool == True:
+                if topology_bool == False:
 
                     # Insert segments of network to the spatial index and dictionary
                     for segment in network_vector.getFeatures():
@@ -168,13 +168,10 @@ class catchment_tools():
                                 if distance_nearest_break > (stub_ratio * segment_length):
                                     network.append(QgsGeometry.asPolyline(seg_start_point, break_points[0]))
 
-                            # Add the remaining segments
+                            # Create and append segments up to last break point
                             else:
-                                for i,pt in enumerate(break_points):
-
-                                    # Create and append segments up to last break point
-                                    if i < len(break_points):
-                                        network.append(QgsGeometry.asPolyline(break_points[i],break_points[i+1]))
+                                for i in range(0,len(break_points)-1):
+                                    network.append(QgsGeometry.asPolyline(break_points[i],break_points[i+1]))
 
                 # If topological network add all segments of the network layer
                 else:
