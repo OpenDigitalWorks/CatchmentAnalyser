@@ -257,16 +257,45 @@ class catchment_tools():
 
         return graph, tied_origins
 
-    def ca_line_analysis(self, graph, tied_origins):
+    def ca_line_analysis(self, graph, tied_origins, radii):
+
+        # Settings
+        ca_threshold = max(radii)
 
         # Variables
-        catchment_network = []
-        catchment_points = []
+        catchment_network = {}
+        catchment_points = {}
 
-        line_dict = {id : 0, geom : [], cost : []}
-        polygon_dict = {origin : [{radius : []}]}
+        # Loop through graph edges, update line dictionary and append
+        for i in graph.arcCount():
+
+            # Get geometry of edge from graph
+            arc_geom = graph.arc(i)
+
+            # Update catchment network
+            catchment_network[i] = [{'geom': arc_geom}, {'cost': []}]
 
         # Loop through tied origins
+        for origin in tied_origins:
+
+            # Find origin vertex id
+            origin_vertex_id = graph.findVertex(tied_origins[i])
+
+            # Run dijkstra and get tree and cost
+            (tree, cost) = QgsGraphAnalyzer.dijkstra(graph, origin_vertex_id, 0)
+
+            # Loop through graph arcs
+            for index in graph.ArcCount():
+
+                arc_outer_point = graph.arc(index).inVertex()
+                arc_cost =
+                # Update cost in line dictionary
+                catchment_network[index][1]['cost'] =
+
+        # line id + cost
+
+        polygon_dict = {origin: [{radius: []}]}
+
 
         return catchment_network, catchment_points
 
