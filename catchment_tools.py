@@ -289,6 +289,7 @@ class catchment_tools():
 
                 # Define the arc end point
                 arc_outer_vertex_id = graph.arc(index).inVertex()
+                arc_outer_vertex_geom = graph.vertex(arc_outer_vertex_id).point()
 
                 # If arc is the origin set zero cost
                 if arc_outer_vertex_id == origin_vertex_id:
@@ -298,17 +299,20 @@ class catchment_tools():
                 elif cost[arc_outer_vertex_id] < ca_threshold and != -1:
                     arc_cost = cost[arc_outer_vertex_id]
 
-                # Update cost in line dictionary
-                catchment_network[index][1]['cost'].append(arc_cost)
+                    # Update cost in catchment network dictionary
+                    catchment_network[index][1]['cost'].append(arc_cost)
 
-        # line id + cost
-
-        polygon_dict = {origin: [{radius: []}]}
-
+                    # Add catchment points for each give radius
+                    for radius in radii:
+                        catchment_points[origin][radius].append(arc_outer_vertex_geom)
 
         return catchment_network, catchment_points
 
-    def ca_polygon_analysis(self, polygon_points):
+    def ca_polygon_analysis(self, points, alpha):
+s
+        # Variables
+        polygon_edges = []
+
 
         return polygon
 
