@@ -287,10 +287,19 @@ class catchment_tools():
             # Loop through graph arcs
             for index in graph.ArcCount():
 
-                arc_outer_point = graph.arc(index).inVertex()
-                arc_cost =
+                # Define the arc end point
+                arc_outer_vertex_id = graph.arc(index).inVertex()
+
+                # If arc is the origin set zero cost
+                if arc_outer_vertex_id == origin_vertex_id:
+                    catchment_network[index][1]['cost'].append(0)
+
+                # If arc is within connected and within the maximum radius set cost accordingly
+                elif cost[arc_outer_vertex_id] < ca_threshold and != -1:
+                    arc_cost = cost[arc_outer_vertex_id]
+
                 # Update cost in line dictionary
-                catchment_network[index][1]['cost'] =
+                catchment_network[index][1]['cost'].append(arc_cost)
 
         # line id + cost
 
