@@ -309,10 +309,47 @@ class catchment_tools():
         return catchment_network, catchment_points
 
     def ca_polygon_analysis(self, points, alpha):
-s
+
         # Variables
         polygon_edges = []
 
+        # Transform points into Shapely's MultiPoint format
+        multi_points = MultiPoint(points)
+
+        # Create Delaunay triangulation
+        triangles = Delaunay(multi_points)
+
+        # Assess triangles
+        for a, b, c in triangles.vertices:
+            coord_a = points[a]
+            coord_b = points[b]
+            coord_c = points[c]
+
+        # Calculating length of triangle sides
+        a = math.sqrt((coord_a[0] - coord_b[0]) ** 2.0 + (coord_a[1] - coord_b[1]) ** 2.0)
+        b = math.sqrt((coord_a[0] - coord_c[0]) ** 2.0 + (coord_a[1] - coord_c[1]) ** 2.0)
+        c = math.sqrt((coord_c[0] - coord_b[0]) ** 2.0 + (coord_c[1] - coord_b[1]) ** 2.0)
+
+        # Semi-perimeter of the triangle
+        s = (a + b + c) / 2.0
+
+        # Area of
+        tri_area = math.sqrt(s * (s - a) * (s - b)) * (s - c)
+        # Calculating circumcircle radius and area
+        circum_rad = a * b * c / (4.0 * tri_area)
+        circum_area = 3.14159 * circum_rad
+
+        # (a * b * c) / math.sqrt((a + b + c) * (b + c - a) * (c + a - b) * (a + b - c))
+        # print circum_rad
+        # Circumcircle radius filter
+        if circum_area < tri_area * 5:
+            polygon_edges.append((coord_a, coord_b))
+            polygon_edges.append((coord_a, coord_c))
+            polygon_edges.append((coord_c, coord_b))
+
+        # Writing the polygon
+        pl_triangles = list(polygonize(pl_lines))
+        pl_polygon = cascaded_union(pl_triangles)
 
         return polygon
 
@@ -320,7 +357,6 @@ s
         pass
 
     def ca_polygon_writer(self, catchment_points, radii, output_polygon):
-
         # Loop through origins
 
             # Loop through radii
