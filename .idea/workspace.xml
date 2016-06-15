@@ -2,9 +2,13 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="a5fe62b1-4b7b-4572-b336-75fabb39d3a5" name="Default" comment="">
+<<<<<<< Updated upstream
       <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/Concave_Hull" />
+=======
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/CatchmentAnalyser.iml" afterPath="$PROJECT_DIR$/.idea/CatchmentAnalyser.iml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/misc.xml" afterPath="$PROJECT_DIR$/.idea/misc.xml" />
+>>>>>>> Stashed changes
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/catchment_tools.py" afterPath="$PROJECT_DIR$/catchment_tools.py" />
     </list>
     <ignored path="CatchmentAnalyser.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -25,17 +29,28 @@
     <favorites_list name="CatchmentAnalyser" />
   </component>
   <component name="FileEditorManager">
+<<<<<<< Updated upstream
     <splitter split-orientation="horizontal" split-proportion="0.34272996">
+=======
+    <splitter split-orientation="horizontal" split-proportion="0.51484376">
+>>>>>>> Stashed changes
       <split-first>
         <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
           <file leaf-file-name="catchment_tools.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/catchment_tools.py">
               <provider selected="true" editor-type-id="text-editor">
+<<<<<<< Updated upstream
                 <state relative-caret-position="704">
                   <caret line="347" column="52" selection-start-line="347" selection-start-column="52" selection-end-line="347" selection-end-column="52" />
                   <folding>
                     <element signature="e#0#26#0" expanded="true" />
                     <element signature="e#892#996#0" expanded="false" />
+=======
+                <state relative-caret-position="644">
+                  <caret line="315" column="0" selection-start-line="315" selection-start-column="0" selection-end-line="315" selection-end-column="0" />
+                  <folding>
+                    <element signature="e#0#26#0" expanded="true" />
+>>>>>>> Stashed changes
                   </folding>
                 </state>
               </provider>
@@ -54,7 +69,11 @@
           <file leaf-file-name="metric_catchment_analyser.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/metric_catchment_analyser.py">
               <provider selected="true" editor-type-id="text-editor">
+<<<<<<< Updated upstream
                 <state relative-caret-position="830">
+=======
+                <state relative-caret-position="4032">
+>>>>>>> Stashed changes
                   <caret line="255" column="17" selection-start-line="255" selection-start-column="17" selection-end-line="255" selection-end-column="20" />
                   <folding />
                 </state>
@@ -64,7 +83,7 @@
           <file leaf-file-name="mca_tools.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/mca_tools.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="3438">
+                <state relative-caret-position="3056">
                   <caret line="198" column="0" selection-start-line="198" selection-start-column="0" selection-end-line="198" selection-end-column="0" />
                   <folding />
                 </state>
@@ -78,8 +97,13 @@
           <file leaf-file-name="mca_tools.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/mca_tools.py">
               <provider selected="true" editor-type-id="text-editor">
+<<<<<<< Updated upstream
                 <state relative-caret-position="2682">
                   <caret line="447" column="4" selection-start-line="447" selection-start-column="4" selection-end-line="447" selection-end-column="62" />
+=======
+                <state relative-caret-position="548">
+                  <caret line="91" column="29" selection-start-line="91" selection-start-column="29" selection-end-line="95" selection-end-column="45" />
+>>>>>>> Stashed changes
                   <folding />
                 </state>
               </provider>
@@ -116,10 +140,10 @@
     <sorting>DEFINITION_ORDER</sorting>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="-8" />
-    <option name="y" value="-8" />
-    <option name="width" value="1696" />
-    <option name="height" value="1026" />
+    <option name="x" value="2" />
+    <option name="y" value="23" />
+    <option name="width" value="1278" />
+    <option name="height" value="773" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="false">
     <OptionsSetting value="true" id="Add" />
@@ -167,6 +191,10 @@
           </PATH>
         </subPane>
       </pane>
+<<<<<<< Updated upstream
+=======
+      <pane id="Scratches" />
+>>>>>>> Stashed changes
       <pane id="Scope" />
     </panes>
   </component>
@@ -177,7 +205,7 @@
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="full.screen.before.presentation.mode" value="false" />
   </component>
-  <component name="RunManager" selected="Python Remote Debug.debug qgis plugin">
+  <component name="RunManager">
     <configuration default="true" type="DjangoTestsConfigurationType" factoryName="Django tests">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -274,12 +302,6 @@
       <method />
     </configuration>
     <configuration default="true" type="js.build_tools.gulp" factoryName="Gulp.js">
-      <node-interpreter>project</node-interpreter>
-      <node-options />
-      <gulpfile />
-      <tasks />
-      <arguments />
-      <envs />
       <method />
     </configuration>
     <configuration default="true" type="js.build_tools.npm" factoryName="npm">
@@ -452,6 +474,7 @@
       <updated>1464369218988</updated>
     </task>
     <task id="LOCAL-00004" summary="Finished drafting origin preparation and graph build functions">
+<<<<<<< Updated upstream
       <created>1465319924247</created>
       <option name="number" value="00004" />
       <option name="presentableId" value="LOCAL-00004" />
@@ -459,6 +482,22 @@
       <updated>1465319924247</updated>
     </task>
     <option name="localTasksCounter" value="5" />
+=======
+      <created>1465248166143</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1465248166143</updated>
+    </task>
+    <task id="LOCAL-00005" summary="Finished drafting analysis function">
+      <created>1465336628340</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1465336628340</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
+>>>>>>> Stashed changes
     <servers />
   </component>
   <component name="TodoView">
@@ -471,27 +510,31 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="-8" y="-8" width="1696" height="1026" extended-state="6" />
-    <editor active="true" />
+    <frame x="2" y="23" width="1278" height="773" extended-state="6" />
+    <editor active="false" />
     <layout>
+<<<<<<< Updated upstream
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.17603911" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+=======
+      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.26537216" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+>>>>>>> Stashed changes
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3299285" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32934132" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32885906" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3299285" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32892805" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32885906" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32954547" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
     </layout>
   </component>
   <component name="Vcs.Log.UiProperties">
@@ -509,7 +552,8 @@
     <MESSAGE value="Advanced on the segmentation" />
     <MESSAGE value="Finished draft network preparation function" />
     <MESSAGE value="Finished drafting origin preparation and graph build functions" />
-    <option name="LAST_COMMIT_MESSAGE" value="Finished drafting origin preparation and graph build functions" />
+    <MESSAGE value="Finished drafting analysis function" />
+    <option name="LAST_COMMIT_MESSAGE" value="Finished drafting analysis function" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -562,18 +606,73 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/catchment_tools.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2862">
+        <state relative-caret-position="4192">
+          <caret line="273" column="0" selection-start-line="273" selection-start-column="0" selection-end-line="273" selection-end-column="0" />
+          <folding>
+            <element signature="e#0#26#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/metric_catchment_analyser.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="4032">
+          <caret line="255" column="17" selection-start-line="255" selection-start-column="17" selection-end-line="255" selection-end-column="20" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/mca_tools.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="3056">
+          <caret line="198" column="0" selection-start-line="198" selection-start-column="0" selection-end-line="198" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/catchment_tools.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="174" column="0" selection-start-line="174" selection-start-column="0" selection-end-line="174" selection-end-column="0" />
+          <folding>
+            <element signature="e#0#26#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/metric_catchment_analyser.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="255" column="17" selection-start-line="255" selection-start-column="17" selection-end-line="255" selection-end-column="20" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/mca_tools.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="198" column="0" selection-start-line="198" selection-start-column="0" selection-end-line="198" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/catchment_tools.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
           <caret line="170" column="36" selection-start-line="170" selection-start-column="36" selection-end-line="170" selection-end-column="36" />
           <folding>
             <element signature="e#0#26#0" expanded="true" />
+<<<<<<< Updated upstream
             <element signature="e#892#996#0" expanded="false" />
+=======
+>>>>>>> Stashed changes
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/metric_catchment_analyser.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="4536">
+        <state relative-caret-position="0">
           <caret line="255" column="17" selection-start-line="255" selection-start-column="17" selection-end-line="255" selection-end-column="20" />
           <folding />
         </state>
@@ -581,7 +680,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/mca_tools.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="3438">
+        <state relative-caret-position="0">
           <caret line="198" column="0" selection-start-line="198" selection-start-column="0" selection-end-line="198" selection-end-column="0" />
           <folding />
         </state>
@@ -589,18 +688,21 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/catchment_tools.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1548">
+        <state relative-caret-position="0">
           <caret line="271" column="35" selection-start-line="271" selection-start-column="35" selection-end-line="271" selection-end-column="35" />
           <folding>
             <element signature="e#0#26#0" expanded="true" />
+<<<<<<< Updated upstream
             <element signature="e#892#996#0" expanded="false" />
+=======
+>>>>>>> Stashed changes
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/metric_catchment_analyser.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="4536">
+        <state relative-caret-position="0">
           <caret line="255" column="17" selection-start-line="255" selection-start-column="17" selection-end-line="255" selection-end-column="20" />
           <folding />
         </state>
@@ -608,7 +710,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/mca_tools.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="3438">
+        <state relative-caret-position="0">
           <caret line="198" column="0" selection-start-line="198" selection-start-column="0" selection-end-line="198" selection-end-column="0" />
           <folding />
         </state>
@@ -616,18 +718,21 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/catchment_tools.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1548">
+        <state relative-caret-position="0">
           <caret line="271" column="35" selection-start-line="271" selection-start-column="35" selection-end-line="271" selection-end-column="35" />
           <folding>
             <element signature="e#0#26#0" expanded="true" />
+<<<<<<< Updated upstream
             <element signature="e#892#996#0" expanded="false" />
+=======
+>>>>>>> Stashed changes
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/metric_catchment_analyser.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="4536">
+        <state relative-caret-position="0">
           <caret line="255" column="17" selection-start-line="255" selection-start-column="17" selection-end-line="255" selection-end-column="20" />
           <folding />
         </state>
@@ -635,7 +740,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/mca_tools.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="3438">
+        <state relative-caret-position="0">
           <caret line="198" column="0" selection-start-line="198" selection-start-column="0" selection-end-line="198" selection-end-column="0" />
           <folding />
         </state>
@@ -643,18 +748,21 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/catchment_tools.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1548">
+        <state relative-caret-position="0">
           <caret line="271" column="35" selection-start-line="271" selection-start-column="35" selection-end-line="271" selection-end-column="35" />
           <folding>
             <element signature="e#0#26#0" expanded="true" />
+<<<<<<< Updated upstream
             <element signature="e#892#996#0" expanded="false" />
+=======
+>>>>>>> Stashed changes
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/metric_catchment_analyser.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="4536">
+        <state relative-caret-position="0">
           <caret line="255" column="17" selection-start-line="255" selection-start-column="17" selection-end-line="255" selection-end-column="20" />
           <folding />
         </state>
@@ -662,7 +770,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/mca_tools.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="3438">
+        <state relative-caret-position="0">
           <caret line="198" column="0" selection-start-line="198" selection-start-column="0" selection-end-line="198" selection-end-column="0" />
           <folding />
         </state>
@@ -674,21 +782,24 @@
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
             <element signature="e#0#26#0" expanded="true" />
+<<<<<<< Updated upstream
             <element signature="e#892#996#0" expanded="false" />
+=======
+>>>>>>> Stashed changes
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/pb_tool.cfg">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="900">
+        <state relative-caret-position="0">
           <caret line="50" column="19" selection-start-line="50" selection-start-column="19" selection-end-line="50" selection-end-column="19" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/metric_catchment_analyser.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="4536">
+        <state relative-caret-position="0">
           <caret line="255" column="17" selection-start-line="255" selection-start-column="17" selection-end-line="255" selection-end-column="20" />
           <folding />
         </state>
@@ -696,7 +807,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/mca_tools.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="3690">
+        <state relative-caret-position="0">
           <caret line="212" column="4" selection-start-line="212" selection-start-column="4" selection-end-line="212" selection-end-column="31" />
           <folding />
         </state>
@@ -708,14 +819,17 @@
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
             <element signature="e#0#26#0" expanded="true" />
+<<<<<<< Updated upstream
             <element signature="e#892#996#0" expanded="false" />
+=======
+>>>>>>> Stashed changes
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/metric_catchment_analyser.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="3757">
+        <state relative-caret-position="0">
           <caret line="224" column="12" selection-start-line="224" selection-start-column="12" selection-end-line="224" selection-end-column="72" />
           <folding />
         </state>
@@ -723,7 +837,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/mca_tools.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="3485">
+        <state relative-caret-position="0">
           <caret line="212" column="4" selection-start-line="212" selection-start-column="4" selection-end-line="212" selection-end-column="31" />
           <folding />
         </state>
@@ -735,14 +849,17 @@
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
             <element signature="e#0#26#0" expanded="true" />
+<<<<<<< Updated upstream
             <element signature="e#892#996#0" expanded="false" />
+=======
+>>>>>>> Stashed changes
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/metric_catchment_analyser.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="3757">
+        <state relative-caret-position="0">
           <caret line="224" column="12" selection-start-line="224" selection-start-column="12" selection-end-line="224" selection-end-column="72" />
           <folding />
         </state>
@@ -750,7 +867,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/mca_tools.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="3485">
+        <state relative-caret-position="0">
           <caret line="212" column="4" selection-start-line="212" selection-start-column="4" selection-end-line="212" selection-end-column="31" />
           <folding />
         </state>
@@ -762,14 +879,17 @@
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
             <element signature="e#0#26#0" expanded="true" />
+<<<<<<< Updated upstream
             <element signature="e#892#996#0" expanded="false" />
+=======
+>>>>>>> Stashed changes
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/metric_catchment_analyser.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="3757">
+        <state relative-caret-position="0">
           <caret line="224" column="12" selection-start-line="224" selection-start-column="12" selection-end-line="224" selection-end-column="72" />
           <folding />
         </state>
@@ -777,7 +897,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/mca_tools.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="3485">
+        <state relative-caret-position="0">
           <caret line="212" column="4" selection-start-line="212" selection-start-column="4" selection-end-line="212" selection-end-column="31" />
           <folding />
         </state>
@@ -789,14 +909,17 @@
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
             <element signature="e#0#26#0" expanded="true" />
+<<<<<<< Updated upstream
             <element signature="e#892#996#0" expanded="false" />
+=======
+>>>>>>> Stashed changes
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/metric_catchment_analyser.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="3757">
+        <state relative-caret-position="0">
           <caret line="224" column="12" selection-start-line="224" selection-start-column="12" selection-end-line="224" selection-end-column="72" />
           <folding />
         </state>
@@ -804,7 +927,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/mca_tools.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="3485">
+        <state relative-caret-position="0">
           <caret line="212" column="4" selection-start-line="212" selection-start-column="4" selection-end-line="212" selection-end-column="31" />
           <folding />
         </state>
@@ -816,14 +939,17 @@
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
             <element signature="e#0#26#0" expanded="true" />
+<<<<<<< Updated upstream
             <element signature="e#892#996#0" expanded="false" />
+=======
+>>>>>>> Stashed changes
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/metric_catchment_analyser.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="3757">
+        <state relative-caret-position="0">
           <caret line="224" column="12" selection-start-line="224" selection-start-column="12" selection-end-line="224" selection-end-column="72" />
           <folding />
         </state>
@@ -831,7 +957,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/mca_tools.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="3485">
+        <state relative-caret-position="0">
           <caret line="212" column="4" selection-start-line="212" selection-start-column="4" selection-end-line="212" selection-end-column="31" />
           <folding />
         </state>
@@ -843,7 +969,10 @@
           <caret line="76" column="0" selection-start-line="76" selection-start-column="0" selection-end-line="76" selection-end-column="0" />
           <folding>
             <element signature="e#0#26#0" expanded="true" />
+<<<<<<< Updated upstream
             <element signature="e#892#996#0" expanded="false" />
+=======
+>>>>>>> Stashed changes
           </folding>
         </state>
       </provider>
@@ -892,7 +1021,10 @@
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
             <element signature="e#0#26#0" expanded="true" />
+<<<<<<< Updated upstream
             <element signature="e#892#996#0" expanded="false" />
+=======
+>>>>>>> Stashed changes
           </folding>
         </state>
       </provider>
@@ -919,35 +1051,20 @@
         </state>
       </provider>
     </entry>
-    <entry file="uml://Python/catchment_tools.catchment_tools">
-      <provider selected="true" editor-type-id="UmlEditorProvider">
-        <state>
-          <ID />
-          <OriginalElement>catchment_tools.catchment_tools</OriginalElement>
-          <nodes>
-            <node x="-375.0" y="-44.0">catchment_tools.catchment_tools</node>
-          </nodes>
-          <notes />
-          <edges />
-          <settings layout="Hierarchic Group" zoom="1.0" x="-357.0" y="-219.0" />
-          <SelectedNodes>
-            <node>catchment_tools.catchment_tools</node>
-          </SelectedNodes>
-          <Categories />
-          <SCOPE>All</SCOPE>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/pb_tool.cfg">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="900">
+        <state relative-caret-position="0">
           <caret line="50" column="19" selection-start-line="50" selection-start-column="19" selection-end-line="50" selection-end-column="19" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/metric_catchment_analyser.py">
       <provider selected="true" editor-type-id="text-editor">
+<<<<<<< Updated upstream
         <state relative-caret-position="830">
+=======
+        <state relative-caret-position="4032">
+>>>>>>> Stashed changes
           <caret line="255" column="17" selection-start-line="255" selection-start-column="17" selection-end-line="255" selection-end-column="20" />
           <folding />
         </state>
@@ -966,17 +1083,25 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/mca_tools.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="3438">
-          <caret line="198" column="0" selection-start-line="198" selection-start-column="0" selection-end-line="198" selection-end-column="0" />
+        <state relative-caret-position="548">
+          <caret line="91" column="29" selection-start-line="91" selection-start-column="29" selection-end-line="95" selection-end-column="45" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Concave_Hull">
       <provider selected="true" editor-type-id="text-editor">
+<<<<<<< Updated upstream
         <state relative-caret-position="2828">
           <caret line="422" column="46" selection-start-line="422" selection-start-column="46" selection-end-line="422" selection-end-column="46" />
           <folding />
+=======
+        <state relative-caret-position="644">
+          <caret line="315" column="0" selection-start-line="315" selection-start-column="0" selection-end-line="315" selection-end-column="0" />
+          <folding>
+            <element signature="e#0#26#0" expanded="true" />
+          </folding>
+>>>>>>> Stashed changes
         </state>
       </provider>
     </entry>
