@@ -566,7 +566,7 @@ class catchment_tools(customCost,concave_hull):
     def origin_preparation(self, origin_vector, origin_name_field):
 
         # Create a list of origin point dictionaries containing name and geometry
-        origin_points = []
+        origins = []
 
         # Check origin layer validity
         if not origin_vector.isValid():
@@ -594,13 +594,13 @@ class catchment_tools(customCost,concave_hull):
 
                 # Depending on type of origin create and append points
                 if f.vectorType() == Qgis.Point:
-                    origin[i] = {origin[origin_name] : f.geometry()}
+                    origin[i] = {origin_name : f.geometry()}
 
                 elif f.vectorType() == Qgis.Polygon or f.vectorType() == Qgis.Line:
-                    origin[i] = {origin[origin_name]: f.geometry().centroid()}
+                    origin[i] = {"name" : origin_name, "geom" : f.geometry().centroid()}
 
                 # Append origin names and geometry to origin points list
-                origin_points.append(origin)
+                origins.append(origin)
 
             return origins
 
@@ -622,7 +622,7 @@ class catchment_tools(customCost,concave_hull):
         else:
             properter = QgsDistanceArcProperter()
 
-        # Building graph
+        # Creating graph builder
         director.addProperter(properter)
         builder = QgsGraphBuilder(network_crs, otf, tolerance, network_epsg)
 
@@ -634,14 +634,21 @@ class catchment_tools(customCost,concave_hull):
             graph_origin_points.append(origin[index][name])
 
         # Get origin graph vertex index
-        tied_origins = director.makeGraph(builder, graph_origin_points)
+        tied_origin_vertices = director.makeGraph(builder, graph_origin_points)
 
         # Build the graph
         graph = builder.graph()
 
+        # Create dictionary of origin names and tied origins
+        tied_origins = {}
+
+        # Combine origin names and tied point vertices
+        for index, tied_origin in enumerate(tied_origin_vertices):
+            tied_origins[index] = {"name" : origin[index][name], "vertex" : tied_origins[index]}
+
         return graph, tied_origins
 
-    def ca_line_analysis(self, graph, tied_origins, radii):
+    def ca_arc_analysis(self, graph, tied_origins, radii):
 
         # Settings
         ca_threshold = max(radii)
@@ -657,13 +664,15 @@ class catchment_tools(customCost,concave_hull):
             arc_geom = graph.arc(i)
 
             # Update catchment network
-            catchment_network[i] = [{'geom': arc_geom}, {'cost': []}]
+            catchment_network[i] = {'geom': arc_geom}
 
         # Loop through tied origins
         for origin in tied_origins:
 
+            origin_name = origin["name"]
+
             # Find origin vertex id
-            origin_vertex_id = graph.findVertex(tied_origins[i])
+            origin_vertex_id = graph.findVertex(tied_origins[i][vertex])
 
             # Run dijkstra and get tree and cost
             (tree, cost) = QgsGraphAnalyzer.dijkstra(graph, origin_vertex_id, 0)
@@ -677,32 +686,97 @@ class catchment_tools(customCost,concave_hull):
 
                 # If arc is the origin set zero cost
                 if arc_outer_vertex_id == origin_vertex_id:
-                    catchment_network[index][1]['cost'].append(0)
+                    catchment_network[index]['cost'][origin_name].append(0)
 
                 # If arc is within connected and within the maximum radius set cost accordingly
                 elif cost[arc_outer_vertex_id] < ca_threshold and != -1:
                     arc_cost = cost[arc_outer_vertex_id]
 
                     # Update cost in catchment network dictionary
-                    catchment_network[index][1]['cost'].append(arc_cost)
+                    catchment_network[index]['cost'][origin_name].append(arc_cost)
 
-                    # Add catchment points for each give radius
+                    # Add catchment points for each given radius
                     for radius in radii:
-                        catchment_points[origin][radius].append(arc_outer_vertex_geom)
+                        catchment_points[origin_name]["radius"] = radius
+                        catchment_points[origin_name]["geom"].append(arc_outer_vertex_geom)
 
         return catchment_network, catchment_points
 
-    def ca_polygon_analysis(self, points, alpha):
+    def ca_network_writer(self, origins, catchment_network, output_network):
 
-        # Get the concave hull using points and alpha factor
-        ca_polygon = concave_hull(points,alpha)
+        # Variables
+        arc_length_list = []
+        arc_cost_list = []
 
-        return ca_polygon
+        # Setup output network id column
+        output_network.dataProvider().addAttributes([QgsField("id", QVariant.Int)])
 
-    def ca_network_writer(self, catchment_network, output_network):
-        pass
+        # Setup all unique origin columns
+        unique_origin_list = []
+        for origin in origins:
+            if not origin in unique_origin_list:
+                output_network.dataProvider().addAttributes([QgsField("%s" % origin, QVariant.Int)])
+                unique_origin_list.append(origin)
 
-    def ca_polygon_writer(self, origins, catchment_points, radii, output_polygon):
+        # Setup minimum origin distance column
+        output_network.dataProvider().addAttributes(QgsField["min_dis", QVariant.Int])
+
+        # Loop through arcs in catchment network and write geometry and costs
+        for arc in catchment_network:
+
+            # Get arc geometry
+            arc_geom = QgsGeometry.fromPolyline(arc['geom'])
+            arc_length = arc_geom.length()
+
+            # Ignore arc if already processed
+            if arc_length in arc_length_list:
+                pass
+
+            # Ignore arc is not connected to origins or outside catchment
+            elif not arc['cost']:
+                pass
+
+            else:
+
+                # Create feature and write id and geom
+                f = QgsFeature(output_network.pendingFields())
+                f.setAttribute("id", arc)
+                f.setGeometry(arc_geom)
+
+                # Read the list of costs and write them to output network
+                for cost_origin in arc['cost'].keys():
+
+                    # Get cost
+                    cost = arc['cost'][cost_origin]
+
+                    # Current cost entry
+                    current_cost = f[cost_origin]
+
+                    # If no entry set cost
+                    if not current_cost:
+                        f.setAttribute("%s" % cost_origin, cost)
+
+                    else:
+
+                        # Replace current cost when less than cost
+                        if current_cost < cost:
+                            f.setAttribute("%s" % cost_origin, cost)
+
+                    # Add to list of costs
+                    arc_cost_list.append(cost)
+
+                # Calculate and write distance to nearest origin
+                if arc_cost_list > 0:
+                    f.setAttribute('min_dist', int(min(cost_list)))
+
+                # Write feature to output network layer
+                output_network.dataProvider().addFeatures([f])
+
+                # Add the length of arc to length list in order to ignore duplicates
+                arc_length_list.append(arc_length)
+
+
+    def ca_polygon_writer(self, origins, catchment_points, radii, output_polygon, alpha):
 
         # Variables
         unique_origin_list = []
@@ -712,8 +786,7 @@ class catchment_tools(customCost,concave_hull):
         output_polygon.dataProvider().addAttributes([
             QgsField("id", QVariant.Int),
             QgsField("origin", QVariant.Int),
-            QgsField("radius", QVariant.Int)
-        ])
+            QgsField("radius", QVariant.Int)])
         output_network.updateFields()
 
         # Loop through origins
@@ -739,38 +812,28 @@ class catchment_tools(customCost,concave_hull):
                     points = catchment_points[origin][radius]
                     polygon_points[name][radius].append(points)
 
+        # Create index for the id column
+        index = 1
+
         # Loop through polygon points and create their concave hull
         for name,points in polygon_points:
-x   
+
             # Loop through radii
             for radius in points[radius]:
 
                 # Create polygon feature
                 p = QgsFeature()
-                p.setAttribute(name)
-                polygon_geom = QgsGeometry.fromWkt((alpha_shape(points, alpha)).wkt)
+                p.setAttribute("id", index)
+                p.setAttribute("origin", name)
+                p.setAttribute("radius", radius)
+                polygon_geom = QgsGeometry.fromWkt((concave_hull(points, alpha)).wkt())
                 p.setGeometry(polygon_geom)
-                output_catchment.dataProvider().addFeatures([p])
+                output_polygon.dataProvider().addFeatures([p])
 
+                # Next feature index
+                index += 1
 
-                # Merge points with other entries
-                polygon_points[origin] =
-
-
-
-
-                # Run polygon analysis
-
-                # Collapse per origin
-
-
-                ca_polygon = concave_hull(points, alpha)
-
-
-
-        # In case of polygon origins overwrite results of lines in origin with 0
-
-        pass
+        return output_polygon
 
     def ca_network_renderer(self, output_network):
         pass
