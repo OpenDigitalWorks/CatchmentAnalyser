@@ -555,9 +555,13 @@ class catchment_tools(customCost,concave_hull):
                             for i in range(0,len(break_points)-1):
                                 network.append(QgsGeometry.asPolyline(break_points[i],break_points[i+1]))
 
-                # If topological network add all segments of the network layer
-                else:
-                    network.append(segment.geometry() for segment in network_vector.getFeatures())
+        # If topological network add all segments of the network layer
+        else:
+
+            # Loop through features and add them to network
+            for segment in network_vector.getFeatures():
+
+                network.append(segment.geometry())
 
         return network
 
@@ -897,8 +901,7 @@ origin_vector = QgsVectorLayer("/Users/laurensversluis/Google Drive/PyQGIS/Proje
 ca = catchment_tools()
 
 # running preparations
-ca.network_preparation(network_vector, '', False, 0.4)
-
+network = ca.network_preparation(network_vector, '', True, 0.4)
 
 
 # running writers
