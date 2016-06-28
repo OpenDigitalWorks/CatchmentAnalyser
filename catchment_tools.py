@@ -887,7 +887,6 @@ class catchment_tools(customCost,concave_hull):
         QgsMapLayerRegistry.instance().addMapLayer(output_polygon)
 
     def warning_message(self,message):
-
         # Gives warning according to message
         self.iface.messageBar().pushMessage(
             "Catchment Analyser: ",
@@ -902,6 +901,7 @@ ca = catchment_tools()
 
 # running preparations
 network = ca.network_preparation(network_vector, '', True, 0.4)
+
 
 
 # running writers
