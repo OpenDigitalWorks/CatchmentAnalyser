@@ -8,6 +8,17 @@ from qgis.utils import *
 
 import math
 
+# Import the debug library
+# set is_debug to False in release version
+is_debug = True
+try:
+    import pydevd
+    has_pydevd = True
+except ImportError, e:
+    has_pydevd = False
+    is_debug = False
+
+
 class customCost(QgsArcProperter):
     def __init__(self, costColumIndex, defaultValue):
         QgsArcProperter.__init__(self)
@@ -25,7 +36,7 @@ class customCost(QgsArcProperter):
         l.append(self.cost_column_index);
         return l
 
-class concave_hull():
+class concaveHull():
     def clean_list(list_of_points):
         """
         Deletes duplicate points in list_of_points
@@ -409,13 +420,17 @@ class concave_hull():
         # a valid hull has been constructed
         return hull
 
-class catchment_tools(customCost,concave_hull):
+class catchmentTools(customCost,concaveHull):
 
     def __init__(self):
-        self.network = None
-        self.origins = None
-        self.cost = None
-        self.origin_name = None
+        # self.network = None
+        # self.origins = None
+        # self.cost = None
+        # self.origin_name = None
+
+        # Add at the end of __init__ function of main plugin class
+        if has_pydevd and is_debug:
+            pydevd.settrace('localhost', port=53100, stdoutToServer=True, stderrToServer=True, suspend=True)
 
     def network_preparation(self, network_vector, unlink_vector, topology_bool, stub_ratio):
 
@@ -456,9 +471,9 @@ class catchment_tools(customCost,concave_hull):
                 self.warning_message("Unlink layer contains no points or polygons!")
 
             # Check unlink geometry type
-            if (unlink_vector.wkbType() == 1 or unlink_vector.wkbType() == 4):
+            if unlink_vector.wkbType() == 1 or unlink_vector.wkbType() == 4:
                 origin_type = 'point'
-            elif (unlink_vector.wkbType() == 3 or unlink_vector.wkbType() == 6):
+            elif unlink_vector.wkbType() == 3 or unlink_vector.wkbType() == 6:
                 origin_type = 'polygon'
 
             # If network is not topological start segmentation
@@ -474,7 +489,7 @@ class catchment_tools(customCost,concave_hull):
 
                     # Create unlink area when unlinks are points
                     if origin_type == 'point':
-                        unlink_area = unlink.geometry().buffer(unlink_buffer,5)
+                        unlink_area = unlink.geometry().buffer(unlink_buffer, 5)
 
                     # Create unlink area when unlinks are polygons
                     else:
@@ -894,15 +909,23 @@ class catchment_tools(customCost,concave_hull):
             level=QgsMessageBar.WARNING,
             duration=5)
 
-network_vector = QgsVectorLayer("/Users/laurensversluis/Google Drive/Utopia_Cureton_Versluis/Ax_Ex_P/Ax_Ex_P.shp", "network", "ogr")
-origin_vector = QgsVectorLayer("/Users/laurensversluis/Google Drive/PyQGIS/Project/mca/origins.shp", "origins", "ogr")
+network_vector = QgsVectorLayer("/Users/laurensversluis/Desktop/sample data/lines.shp", "network", "ogr")
+origin_vector = QgsVectorLayer("/Users/laurensversluis/Desktop/sample data/points.shp", "origins", "ogr")
 
-ca = catchment_tools()
+ca = catchmentTools()
 
 # running preparations
 network = ca.network_preparation(network_vector, '', True, 0.4)
 
+vl = QgsVectorLayer("Line", "Lines", "memory")
+pr = vl.dataProvider()
+for l in network:
+    print l.validateGeometry()
+    # f = QgsFeature()
+    #f.setGeometry(QgsGeometry.asPolyline(l))
 
+    #pr.addFeatures(l)
+# QgsMapLayerRegistry.instance().addMapLayer(vl)
 
 # running writers
 # ca_network_writer(output_network, mca_network)
