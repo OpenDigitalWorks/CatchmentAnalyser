@@ -8,17 +8,6 @@ from qgis.utils import *
 
 import math
 
-# Import the debug library
-# set is_debug to False in release version
-is_debug = True
-try:
-    import pydevd
-    has_pydevd = True
-except ImportError, e:
-    has_pydevd = False
-    is_debug = False
-
-
 class customCost(QgsArcProperter):
     def __init__(self, costColumIndex, defaultValue):
         QgsArcProperter.__init__(self)
@@ -429,8 +418,7 @@ class catchmentTools(customCost,concaveHull):
         # self.origin_name = None
 
         # Add at the end of __init__ function of main plugin class
-        if has_pydevd and is_debug:
-            pydevd.settrace('localhost', port=53100, stdoutToServer=True, stderrToServer=True, suspend=True)
+        pass
 
     def network_preparation(self, network_vector, unlink_vector, topology_bool, stub_ratio):
 
@@ -438,38 +426,38 @@ class catchmentTools(customCost,concaveHull):
         unlink_buffer = 5
 
         # Variables
-        network = [] # Final list of network lines
-        segment_index = QgsSpatialIndex() # Index of segment bounding boxes
-        segment_dict = {} # Dictionary of segments indices and geometries
-        unlinked_segments_ids = []
-        origin_type = None # Origins can be point or polygon
+        network = []  # Final list of network lines
+        segment_index = QgsSpatialIndex()  # Index of segment bounding boxes
+        segment_dict = {}  # Dictionary of segments indices and geometries
+        unlink_index = QgsSpatialIndex()
+
 
         if not network_vector:
-            self.warning_message("No network layer selected!")
+            print "No network layer selected!"
 
         else:
 
             # Check network layer validity
             if not network_vector.isValid():
-                self.warning_message("Invalid network layer!")
+                print "Invalid network layer!"
 
             # Check if network layer contains lines
             elif not (network_vector.wkbType() == 2 or network_vector.wkbType() == 5):
-                self.warning_message("Network layer contains no lines!")
+                print "Network layer contains no lines!"
 
         # Check unlink layer
         if unlink_vector:
 
             # Check origin layer validity
             if not unlink_vector.isValid():
-                self.warning_message("Invalid origin layer!")
+                print "Invalid origin layer!"
 
             # Check if origin layer contains lines
             elif not (unlink_vector.wkbType() == 1 or
-            unlink_vector.wkbType() == 3 or
-            unlink_vector.wkbType() == 4 or
-            unlink_vector.wkbType() == 6):
-                self.warning_message("Unlink layer contains no points or polygons!")
+                              unlink_vector.wkbType() == 3 or
+                              unlink_vector.wkbType() == 4 or
+                              unlink_vector.wkbType() == 6):
+                print "Unlink layer contains no points or polygons!"
 
             # Check unlink geometry type
             if unlink_vector.wkbType() == 1 or unlink_vector.wkbType() == 4:
@@ -477,107 +465,125 @@ class catchmentTools(customCost,concaveHull):
             elif unlink_vector.wkbType() == 3 or unlink_vector.wkbType() == 6:
                 origin_type = 'polygon'
 
-            # If network is not topological start segmentation
-            if topology_bool == False:
+        # If network is not topological start segmentation
+        if topology_bool == False:
 
-                # Insert segments of network to the spatial index and dictionary
-                for segment in network_vector.getFeatures():
-                    segment_index.insertFeature(segment)
-                    segment_dict[segment.id()] = segment.geometry().asWkb()
+            # Insert segments of network to the spatial index and dictionary
+            for segment in network_vector.getFeatures():
+                segment_index.insertFeature(segment)
+                segment_dict[segment.id()] = segment.geometryAndOwnership()
 
-                # Loop through unlinks and list unlinked segments
+            # Create index of unlinks
+            if unlink_vector:
                 for unlink in unlink_vector.getFeatures():
 
                     # Create unlink area when unlinks are points
                     if origin_type == 'point':
-                        unlink_area = unlink.geometry().buffer(unlink_buffer, 5)
 
-                    # Create unlink area when unlinks are polygons
+                        # Create unlink area 5m around the point
+                        unlink_geom = unlink.geometry().buffer(unlink_buffer, 5)
+                        unlink_area = QgsFeature()
+                        unlink_area.setGeometry(unlink_geom)
+
+                    # Create unlink area when unlinks are polygons or lines
                     else:
-                        unlink_area = unlink.geometry().boundingBox()
+                        unlink_area = unlink
 
-                    # Create list of id's of intersecting segments
-                    nearest_segments = segment_index.intersects(unlink_area)
+                    # Add unlink to index and to dictionary
+                    unlink_index.insertFeature(unlink_area)
 
-                    # Check number of intersecting segments
-                    if nearest_segments > 2:
-                        self.warning_message("Unlink layer references to many segments!")
+            # Break each segment based on intersecting lines and unlinks
+            for segment in network_vector.getFeatures():
 
-                    # Add unlinked segments to the list
+                # Get id and geometry and length from segment
+                segment_id = segment.id()
+                segment_geom = segment.geometry()
+                segment_length = segment_geom.length()
+
+                # Get points from original segment
+                seg_start_point = segment_geom.asPolyline()[0]
+                seg_end_point = segment_geom.asPolyline()[-1]
+
+                # Create list of id's of intersecting segments
+                nearest_segment_ids = segment_index.intersects(segment_geom.boundingBox())
+
+                # List of break points for the new segments
+                break_points = []
+
+                # Identify intersecting segments
+                intersecting_segments_ids = segment_index.intersects(segment_geom.boundingBox())
+
+                # Loop for intersecting segments excluding itself
+                for id in intersecting_segments_ids:
+
+                    # Skip if segment is itself
+                    if id == segment_id:
+                        continue
+
+                    # Break segment according to remaining intersecting segment
                     else:
-                         for seg_id in nearest_segments:
-                             unlinked_segments_ids.append(seg_id)
 
-                # Loop through the segments
-                for segment in network_vector.getFeatures():
+                        # Get geometry of intersecting segment
+                        int_seg_geom = segment_dict[id]
 
-                    # Get id and geometry and length from segment
-                    segment_id = segment.id()
-                    segment_geom = segment.geometry()
-                    segment_length = segment_geom.length()
+                        # Identify the construction point of the new segment
+                        if segment_geom.crosses(int_seg_geom) or segment_geom.touches(int_seg_geom):
 
-                    # Get points from original segment
-                    seg_start_point = segment_geom.asPolyline()[0]
-                    seg_end_point = segment_geom.asPolyline()[-1]
+                            # Create point where lines cross
+                            point_geom = segment_geom.intersection(int_seg_geom)
 
-                    # Add unlinked segments to the network
-                    if segment_id in unlinked_segments_ids:
-                        network.append(segment_geom)
+                            # Create polygon of inters
+                            point_buffer_geom = point_geom.buffer(1, 1).boundingBox()
 
-                    # Split the remaining segments
-                    else:
+                            # Check if cross point is an unlink
+                            if not unlink_index.intersects(point_buffer_geom):
+                                # Break points of intersecting lines
+                                break_points.append(point_geom.asPoint())
 
-                        # Identify intersecting segments
-                        intersecting_segments_ids = segment_index.intersects(segment_geom.boundingBox())
+                # Sort break_points according to distance to start point
+                break_points.sort(key=lambda x: QgsDistanceArea().measureLine(seg_start_point, x))
 
-                        # Loop for intersecting segments excluding itself
-                        for id in [i for i in intersecting_segments_ids if i != segment_id]:
+                # Create segments using break points
+                for i in range(0, len(break_points) - 1):
+                    # Set end points
+                    start_geom = QgsPoint(break_points[i])
+                    end_geom = QgsPoint(break_points[i + 1])
 
-                            # Get geometry of intersecting segment
-                            int_seg_geom = QgsGeometry()
-                            int_seg_geom.fromWkb(segment_dict[id])
+                    # Create line and add to network
+                    network.append(QgsGeometry.fromPolyline([start_geom, end_geom]))
 
-                            # Identify all construction points of the new segments
-                            if segment_geom.crosses(int_seg_geom):
+                # Check if first segment is a potential stub
+                for point in break_points:
 
-                                # Break points of intersecting lines sorted according to distance to start point
-                                break_points = segment_geom.intersection(int_seg_geom).asGeometryCollection()
-                                break_points.sort(key=lambda x: QgsDistanceArea().measureLine(seg_start_point,x))
+                    if point != seg_start_point:
 
-                            elif segment_geom.touches(int_seg_geom):
+                        # Calculate distance between point and start point
+                        distance_nearest_break = QgsDistanceArea().measureLine(seg_start_point, break_points[0])
 
-                                # End points of touching lines sorted according to distance to start point
-                                touch_points = segment_geom.intersection(int_seg_geom).asGeometryCollection()
-                                break_points.sort(key=lambda x: QgsDistanceArea().measureLine(seg_start_point, x))
+                        # Only add first segment if it is a dead end
+                        if distance_nearest_break > (stub_ratio * segment_length):
+                            network.append(QgsGeometry.fromPolyline([seg_start_point, break_points[0]]))
 
-                        # Check if first segment is a potential stub
-                        if not seg_start_point in touch_points:
-                            distance_nearest_break = QgsDistanceArea().measureLine(seg_start_point,break_points[0])
+                    # Check if last segment is a potential stub
+                    elif point != seg_end_point:
 
-                            # Only add first segment if it is a dead end
-                            if distance_nearest_break > (stub_ratio * segment_length):
-                                network.append(QgsGeometry.asPolyline(seg_start_point,break_points[0]))
+                        # Calculate distance between point and end point
+                        distance_nearest_break = QgsDistanceArea().measureLine(seg_end_point, break_points[-1])
 
-                        # Check if last segment is a potential stub
-                        elif not seg_end_point in touch_points:
-                            distance_nearest_break = QgsDistanceArea().measureLine(seg_end_point, break_points[-1])
+                        # Only add last segment if it is a dead end
+                        if distance_nearest_break > (stub_ratio * segment_length):
+                            network.append(QgsGeometry.fromPolyline([seg_end_point, break_points[-1]]))
 
-                            # Only add last segment if it is a dead end
-                            if distance_nearest_break > (stub_ratio * segment_length):
-                                network.append(QgsGeometry.asPolyline(seg_start_point, break_points[0]))
-
-                        # Create and append segments up to last break point
-                        else:
-                            for i in range(0,len(break_points)-1):
-                                network.append(QgsGeometry.asPolyline(break_points[i],break_points[i+1]))
-
-        # If topological network add all segments of the network layer
+        # If topological network add all segments of the network layer straight away
         else:
 
             # Loop through features and add them to network
             for segment in network_vector.getFeatures():
+                # Get geometry from features
+                geom = segment.geometryAndOwnership()
 
-                network.append(segment.geometry())
+                # Append geometry to network list
+                network.append(geom)
 
         return network
 

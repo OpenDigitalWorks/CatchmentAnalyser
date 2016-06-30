@@ -30,6 +30,17 @@ import os.path
 # Import tool classes
 import catchment_tools
 
+# Import the debug library
+# set is_debug to False in release version
+is_debug = True
+try:
+    import pydevd
+    has_pydevd = True
+except ImportError, e:
+    has_pydevd = False
+    is_debug = False
+
+
 class CatchmentAnalyser:
     """QGIS Plugin Implementation."""
 
@@ -68,6 +79,9 @@ class CatchmentAnalyser:
         # TODO: We are going to let the user set this up in a future iteration
         self.toolbar = self.iface.addToolBar(u'CatchmentAnalyser')
         self.toolbar.setObjectName(u'CatchmentAnalyser')
+
+        if has_pydevd and is_debug:
+            pydevd.settrace('localhost', port=53100, stdoutToServer=True, stderrToServer=True, suspend=True)
 
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
