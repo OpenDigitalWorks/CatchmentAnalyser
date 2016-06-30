@@ -22,11 +22,19 @@
 """
 from PyQt4.QtCore import QSettings, QTranslator, qVersion, QCoreApplication
 from PyQt4.QtGui import QAction, QIcon
+
 # Initialize Qt resources from file resources.py
 import resources
+
 # Import the code for the dialog
 from catchment_analyser_dialog import CatchmentAnalyserDialog
 import os.path
+
+# Import QGIS classes
+from qgis.core import *
+from qgis.networkanalysis import *
+from qgis.utils import *
+
 # Import tool classes
 import catchment_tools
 
@@ -39,7 +47,6 @@ try:
 except ImportError, e:
     has_pydevd = False
     is_debug = False
-
 
 class CatchmentAnalyser:
     """QGIS Plugin Implementation."""
@@ -56,6 +63,9 @@ class CatchmentAnalyser:
         self.iface = iface
         # initialize plugin directory
         self.plugin_dir = os.path.dirname(__file__)
+
+        self.catchmentAnalysis = catchment_tools.catchmentAnalysis(self.iface)
+
         # initialize locale
         locale = QSettings().value('locale/userLocale')[0:2]
         locale_path = os.path.join(
@@ -79,9 +89,9 @@ class CatchmentAnalyser:
         # TODO: We are going to let the user set this up in a future iteration
         self.toolbar = self.iface.addToolBar(u'CatchmentAnalyser')
         self.toolbar.setObjectName(u'CatchmentAnalyser')
-
+        # Setup debugger
         if has_pydevd and is_debug:
-            pydevd.settrace('localhost', port=53100, stdoutToServer=True, stderrToServer=True, suspend=True)
+            pydevd.settrace('localhost', port=53100, stdoutToServer=True, stderrToServer=True, suspend=False)
 
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
@@ -198,6 +208,16 @@ class CatchmentAnalyser:
         """Run method that performs all the real work"""
         # show the dialog
         self.dlg.show()
+
+        # Test files
+        origin_vector = QgsVectorLayer("/Users/laurensversluis/Desktop/sample data/origin_polygon.shp", "network",
+                                       "ogr")
+
+        origin_name_field = 'name'
+
+        # Test environments
+        self.catchmentAnalysis.origin_preparation(origin_vector, origin_name_field)
+
         # Run the dialog event loop
         result = self.dlg.exec_()
         # See if OK was pressed

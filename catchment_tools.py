@@ -409,16 +409,12 @@ class concaveHull():
         # a valid hull has been constructed
         return hull
 
-class catchmentTools(customCost,concaveHull):
+class catchmentAnalysis(QObject):
 
-    def __init__(self):
-        # self.network = None
-        # self.origins = None
-        # self.cost = None
-        # self.origin_name = None
-
-        # Add at the end of __init__ function of main plugin class
-        pass
+    def __init__(self, iface):
+        QObject.__init__(self)
+        self.concave_hull = concaveHull()
+        self.iface = iface
 
     def network_preparation(self, network_vector, unlink_vector, topology_bool, stub_ratio):
 
@@ -433,31 +429,31 @@ class catchmentTools(customCost,concaveHull):
 
 
         if not network_vector:
-            print "No network layer selected!"
+            self.warning_message("No network layer selected!")
 
         else:
 
             # Check network layer validity
             if not network_vector.isValid():
-                print "Invalid network layer!"
+                self.warning_message("Invalid network layer!")
 
             # Check if network layer contains lines
             elif not (network_vector.wkbType() == 2 or network_vector.wkbType() == 5):
-                print "Network layer contains no lines!"
+                self.warning_message("Network layer contains no lines!")
 
         # Check unlink layer
         if unlink_vector:
 
             # Check origin layer validity
             if not unlink_vector.isValid():
-                print "Invalid origin layer!"
+                self.warning_message("Invalid origin layer!")
 
             # Check if origin layer contains lines
             elif not (unlink_vector.wkbType() == 1 or
                               unlink_vector.wkbType() == 3 or
                               unlink_vector.wkbType() == 4 or
                               unlink_vector.wkbType() == 6):
-                print "Unlink layer contains no points or polygons!"
+                self.warning_message("Unlink layer contains no points or polygons!")
 
             # Check unlink geometry type
             if unlink_vector.wkbType() == 1 or unlink_vector.wkbType() == 4:
@@ -672,7 +668,7 @@ class catchmentTools(customCost,concaveHull):
 
         return graph, tied_origins
 
-    def ca_arc_analysis(self, graph, tied_origins, radii):
+    def ca_graph_analysis(self, graph, tied_origins, radii):
 
         # Settings
         ca_threshold = max(radii)
