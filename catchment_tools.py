@@ -457,6 +457,7 @@ class catchmentTools(customCost,concaveHull):
             elif not (network_vector.wkbType() == 2 or network_vector.wkbType() == 5):
                 self.warning_message("Network layer contains no lines!")
 
+        # Check unlink layer
         if unlink_vector:
 
             # Check origin layer validity
@@ -592,7 +593,7 @@ class catchmentTools(customCost,concaveHull):
         else:
 
             # Check origin layer geometry
-            if  origin_vector.wkbType() == 7:
+            if origin_vector.wkbType() == 7:
                 self.warning_message("Invalid origin geometry!")
 
             # Loop through origin and get or create points
@@ -908,29 +909,3 @@ class catchmentTools(customCost,concaveHull):
             "%s" % (message),
             level=QgsMessageBar.WARNING,
             duration=5)
-
-network_vector = QgsVectorLayer("/Users/laurensversluis/Desktop/sample data/lines.shp", "network", "ogr")
-origin_vector = QgsVectorLayer("/Users/laurensversluis/Desktop/sample data/points.shp", "origins", "ogr")
-
-ca = catchmentTools()
-
-# running preparations
-network = ca.network_preparation(network_vector, '', True, 0.4)
-
-vl = QgsVectorLayer("Line", "Lines", "memory")
-pr = vl.dataProvider()
-for l in network:
-    print l.validateGeometry()
-    # f = QgsFeature()
-    #f.setGeometry(QgsGeometry.asPolyline(l))
-
-    #pr.addFeatures(l)
-# QgsMapLayerRegistry.instance().addMapLayer(vl)
-
-# running writers
-# ca_network_writer(output_network, mca_network)
-# ca_polygon_writer(output_catchment, mca_catchments, origins_name, alpha)
-#
-# # running renderers
-# ca_network_renderer(output_network, radii)
-# ca_network_polygon_renderer(output_polygon)

@@ -23,10 +23,8 @@
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 from qgis.core import *
-from qgis.gui import *
 
 # Initialize Qt resources from file resources.py
-import resources
 # Import the code for the dialog
 from metric_catchment_analyser_dialog import MetricCatchmentAnalyserDialog
 import os.path
