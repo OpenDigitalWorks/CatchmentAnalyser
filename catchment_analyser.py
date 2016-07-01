@@ -209,14 +209,41 @@ class CatchmentAnalyser:
         # show the dialog
         self.dlg.show()
 
+        # Setup dialog
+
+
+
         # Test files
+        network_vector = QgsVectorLayer("/Users/laurensversluis/Desktop/sample data/lines.shp", "network", "ogr")
+
         origin_vector = QgsVectorLayer("/Users/laurensversluis/Desktop/sample data/origin_polygon.shp", "network",
                                        "ogr")
 
+        unlink_vector = QgsVectorLayer("/Users/laurensversluis/Desktop/sample data/origin_point.shp", "network",
+
+                                       "ogr")
+        # Test variables
+        topology_bool = False
+        stub_ratio = 0.4
         origin_name_field = 'name'
+        tolerance = 1
+        cost_field = 'cost'
 
         # Test environments
-        self.catchmentAnalysis.origin_preparation(origin_vector, origin_name_field)
+        network, network_epsg = self.catchmentAnalysis.network_preparation(network_vector,
+                                                                           cost_field,
+                                                                           unlink_vector,
+                                                                           topology_bool,
+                                                                           stub_ratio)
+
+        origins = self.catchmentAnalysis.origin_preparation(origin_vector,
+                                                            origin_name_field)
+
+        graph, tied_origins = self.catchmentAnalysis.graph_builder(network_vector,
+                                                                   network_cost_index,
+                                                                   origins,
+                                                                   tolerance,
+                                                                   network_epsg)
 
         # Run the dialog event loop
         result = self.dlg.exec_()
@@ -224,4 +251,13 @@ class CatchmentAnalyser:
         if result:
             # Do something useful here - delete the line containing pass and
             # substitute with your code.
+
+            # Retrieve information dialog
+
+            # Run Analysis
+
             pass
+
+
+    def close_method(self):
+        self.dlg.close()

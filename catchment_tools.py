@@ -416,58 +416,54 @@ class catchmentAnalysis(QObject):
         self.concave_hull = concaveHull()
         self.iface = iface
 
-    def network_preparation(self, network_vector, unlink_vector, topology_bool, stub_ratio):
+    def network_preparation(self, network_vector, network_cost_field, unlink_vector, topology_bool, stub_ratio):
 
         # Settings
         unlink_buffer = 5
 
         # Variables
-        network = []  # Final list of network lines
-        segment_index = QgsSpatialIndex()  # Index of segment bounding boxes
-        segment_dict = {}  # Dictionary of segments indices and geometries
+        network_crs = network_vector.crs()
+        network_epsg = network_crs.authid()
+        segment_index = QgsSpatialIndex()
+        segment_dict = {}
         unlink_index = QgsSpatialIndex()
 
+        # Output network
+        network = self.createTempLayer('network','LINESTRING', network_crs,['cost',],[QVariant.Int,])
 
         if not network_vector:
-            self.warning_message("No network layer selected!")
+            self.giveWarningMessage("No network layer selected!")
 
         else:
 
             # Check network layer validity
             if not network_vector.isValid():
-                self.warning_message("Invalid network layer!")
+                self.giveWarningMessage("Invalid network layer!")
 
             # Check if network layer contains lines
             elif not (network_vector.wkbType() == 2 or network_vector.wkbType() == 5):
-                self.warning_message("Network layer contains no lines!")
+                self.giveWarningMessage("Network layer contains no lines!")
 
-        # Check unlink layer
+        # Check unlink layer geometry type
         if unlink_vector:
 
-            # Check origin layer validity
-            if not unlink_vector.isValid():
-                self.warning_message("Invalid origin layer!")
-
-            # Check if origin layer contains lines
-            elif not (unlink_vector.wkbType() == 1 or
-                              unlink_vector.wkbType() == 3 or
-                              unlink_vector.wkbType() == 4 or
-                              unlink_vector.wkbType() == 6):
-                self.warning_message("Unlink layer contains no points or polygons!")
-
-            # Check unlink geometry type
-            if unlink_vector.wkbType() == 1 or unlink_vector.wkbType() == 4:
-                origin_type = 'point'
-            elif unlink_vector.wkbType() == 3 or unlink_vector.wkbType() == 6:
-                origin_type = 'polygon'
+            origin_type = self.getGeomType(unlink_vector)
 
         # If network is not topological start segmentation
         if topology_bool == False:
 
             # Insert segments of network to the spatial index and dictionary
             for segment in network_vector.getFeatures():
+
+                # Add segment to spatial index
                 segment_index.insertFeature(segment)
-                segment_dict[segment.id()] = segment.geometryAndOwnership()
+
+                # Create
+                segment_dict[segment.id()] = {'geom' : segment.geometryAndOwnership(), 'cost' : None}
+
+                # If exist append custom cost to segment dictionary
+                if network_cost_field:
+                    segment_dict[segment.id()]['cost'] = segment[network_cost_field]
 
             # Create index of unlinks
             if unlink_vector:
@@ -489,19 +485,21 @@ class catchmentAnalysis(QObject):
                     unlink_index.insertFeature(unlink_area)
 
             # Break each segment based on intersecting lines and unlinks
-            for segment in network_vector.getFeatures():
+            for segment_id, att in segment_dict.items():
 
-                # Get id and geometry and length from segment
-                segment_id = segment.id()
-                segment_geom = segment.geometry()
+                # Get geometry, length, cost from segment
+                segment_geom = att['geom']
                 segment_length = segment_geom.length()
+
+                if network_cost_field:
+                    segment_cost = att['cost']
+
+                    # Calculate cost ratio
+                    cost_ratio = segment_length/segment_cost
 
                 # Get points from original segment
                 seg_start_point = segment_geom.asPolyline()[0]
                 seg_end_point = segment_geom.asPolyline()[-1]
-
-                # Create list of id's of intersecting segments
-                nearest_segment_ids = segment_index.intersects(segment_geom.boundingBox())
 
                 # List of break points for the new segments
                 break_points = []
@@ -545,8 +543,13 @@ class catchmentAnalysis(QObject):
                     start_geom = QgsPoint(break_points[i])
                     end_geom = QgsPoint(break_points[i + 1])
 
-                    # Create line and add to network
-                    network.append(QgsGeometry.fromPolyline([start_geom, end_geom]))
+                    # Create new geometry and cost and write to network
+                    line_geom = QgsGeometry.fromPolyline([start_geom, end_geom])
+                    if network_cost_field:
+                        line_cost = line_geom.length() * cost_ratio
+                    else:
+                        line_cost = ''
+                    self.insertTempFeatures(network,line_geom,line_cost)
 
                 # Check if first segment is a potential stub
                 for point in break_points:
@@ -558,7 +561,14 @@ class catchmentAnalysis(QObject):
 
                         # Only add first segment if it is a dead end
                         if distance_nearest_break > (stub_ratio * segment_length):
-                            network.append(QgsGeometry.fromPolyline([seg_start_point, break_points[0]]))
+
+                            # Create new geometry and cost and write to network
+                            line_geom = QgsGeometry.fromPolyline([seg_start_point, break_points[0]])
+                            if network_cost_field:
+                                line_cost = line_geom.length() * cost_ratio
+                            else:
+                                line_cost = ''
+                            self.insertTempFeatures(network, line_geom, line_cost)
 
                     # Check if last segment is a potential stub
                     elif point != seg_end_point:
@@ -568,18 +578,29 @@ class catchmentAnalysis(QObject):
 
                         # Only add last segment if it is a dead end
                         if distance_nearest_break > (stub_ratio * segment_length):
-                            network.append(QgsGeometry.fromPolyline([seg_end_point, break_points[-1]]))
+
+                            # Create new geometry and cost and write to network
+                            line_geom = QgsGeometry.fromPolyline([seg_end_point, break_points[-1]])
+                            if network_cost_field:
+                                line_cost = line_geom.length() * cost_ratio
+                            else:
+                                line_cost = ''
+
+                            self.insertTempFeatures(network, line_geom, line_cost)
 
         # If topological network add all segments of the network layer straight away
         else:
 
             # Loop through features and add them to network
             for segment in network_vector.getFeatures():
-                # Get geometry from features
-                geom = segment.geometryAndOwnership()
 
-                # Append geometry to network list
-                network.append(geom)
+                # Create new geometry and cost and write to network
+                line_geom = segment.geometryAndOwnership()
+                if network_cost_field:
+                    line_cost = line_geom.length() * cost_ratio
+                else:
+                    line_cost = ''
+                self.insertTempFeatures(network, line_geom, line_cost)
 
         return network
 
@@ -590,13 +611,12 @@ class catchmentAnalysis(QObject):
 
         # Check origin layer validity
         if not origin_vector.isValid():
-            self.warning_message("Invalid origin layer!")
+            self.giveWarningMessage("Invalid origin layer!")
 
         else:
 
-            # Check origin layer geometry
-            if origin_vector.wkbType() == 7:
-                self.warning_message("Invalid origin geometry!")
+            # Check geometry type of origin layer
+            origin_type = self.getGeomType(origin_vector)
 
             # Loop through origin and get or create points
             for i,f in enumerate(origin_vector.getFeatures()):
@@ -606,6 +626,7 @@ class catchmentAnalysis(QObject):
 
                 # If origin name field is given get name
                 if origin_name_field:
+                    print f[origin_name_field]
                     origin_name = f[origin_name_field]
 
                 # Otherwise use index as name
@@ -613,10 +634,10 @@ class catchmentAnalysis(QObject):
                     origin_name = i
 
                 # Depending on type of origin create and append points
-                if f.vectorType() == Qgis.Point:
+                if origin_type == 'point':
                     origin[i] = {origin_name : f.geometry()}
 
-                elif f.vectorType() == Qgis.Polygon or f.vectorType() == Qgis.Line:
+                elif origin_type == 'line' or origin_type == 'polygon':
                     origin[i] = {"name" : origin_name, "geom" : f.geometry().centroid()}
 
                 # Append origin names and geometry to origin points list
@@ -624,21 +645,25 @@ class catchmentAnalysis(QObject):
 
             return origins
 
-    def graph_builder(self,network, cost_field, origins, tolerance):
+    def graph_builder(self, network_vector, cost_field, origins, tolerance):
 
         # Settings
-        network_crs = network.crs()
-        network_epsg = network_crs.authid()
         otf = False
-        network_fields = network.pendingFields()
-        custom_cost_index = network_fields.indexFromName(cost_field)
+
+        # Get projection of the network
+        network_crs = network_vector.crs()
+        network_epsg = network_crs.authid()
+
+        # Get index of cost field
+        network_fields = network_vector.pendingFields()
+        network_cost_index = network_fields.indexFromName(cost_field)
 
         # Setting up graph build director
-        director = QgsLineVectorLayerDirector(network, -1, '', '', '', 3)
+        director = QgsLineVectorLayerDirector(network_vector, -1, '', '', '', 3)
 
         # Determining cost calculation
         if cost_field == True:
-            properter = customCost(custom_cost_index,0)
+            properter = customCost(network_cost_index,0)
         else:
             properter = QgsDistanceArcProperter()
 
@@ -650,8 +675,8 @@ class catchmentAnalysis(QObject):
         graph_origin_points = []
 
         # Loop through the origin points and add graph vertex indices
-        for index,origin in enumerate(origins):
-            graph_origin_points.append(origin[index][name])
+        for index, origin in enumerate(origins):
+            graph_origin_points.append(origins[index]['name'])
 
         # Get origin graph vertex index
         tied_origin_vertices = director.makeGraph(builder, graph_origin_points)
@@ -664,14 +689,14 @@ class catchmentAnalysis(QObject):
 
         # Combine origin names and tied point vertices
         for index, tied_origin in enumerate(tied_origin_vertices):
-            tied_origins[index] = {"name" : origin[index][name], "vertex" : tied_origins[index]}
+            tied_origins[index] = {"name" : origins[index][name], "vertex" : tied_origin}
 
         return graph, tied_origins
 
-    def ca_graph_analysis(self, graph, tied_origins, radii):
+    def graph_analysis(self, graph, tied_origins, radii):
 
         # Settings
-        ca_threshold = max(radii)
+        catchment_threshold = max(radii)
 
         # Variables
         catchment_network = {}
@@ -709,7 +734,7 @@ class catchmentAnalysis(QObject):
                     catchment_network[index]['cost'][origin_name].append(0)
 
                 # If arc is within connected and within the maximum radius set cost accordingly
-                elif cost[arc_outer_vertex_id] < ca_threshold and cost[arc_outer_vertex_id] != -1:
+                elif cost[arc_outer_vertex_id] < catchment_threshold and cost[arc_outer_vertex_id] != -1:
                     arc_cost = cost[arc_outer_vertex_id]
 
                     # Update cost in catchment network dictionary
@@ -722,7 +747,7 @@ class catchmentAnalysis(QObject):
 
         return catchment_network, catchment_points
 
-    def ca_network_writer(self, origins, catchment_network, output_network):
+    def network_writer(self, origins, catchment_network, output_network):
 
         # Variables
         arc_length_list = []
@@ -797,7 +822,7 @@ class catchmentAnalysis(QObject):
 
         return output_network
 
-    def ca_polygon_writer(self, catchment_points, radii, output_polygon, alpha):
+    def polygon_writer(self, catchment_points, radii, output_polygon, alpha):
 
         # Variables
         unique_origin_list = []
@@ -853,7 +878,7 @@ class catchmentAnalysis(QObject):
 
         return output_polygon
 
-    def ca_network_renderer(self, output_network, radii):
+    def network_renderer(self, output_network, radii):
 
         # Settings
         ca_threshold = max(int(radii))
@@ -889,7 +914,7 @@ class catchmentAnalysis(QObject):
         # add network to the canvas
         QgsMapLayerRegistry.instance().addMapLayer(output_network)
 
-    def ca_polygon_renderer(self, output_polygon):
+    def polygon_renderer(self, output_polygon):
 
         # create a black dotted outline symbol layer
         symbol_layer = QgsMarkerLineSymbolLayerV2()
@@ -904,10 +929,74 @@ class catchmentAnalysis(QObject):
         # add catchment to the canvas
         QgsMapLayerRegistry.instance().addMapLayer(output_polygon)
 
-    def warning_message(self,message):
+    def giveWarningMessage(self, message):
         # Gives warning according to message
         self.iface.messageBar().pushMessage(
             "Catchment Analyser: ",
             "%s" % (message),
             level=QgsMessageBar.WARNING,
             duration=5)
+
+    def getGeomType(self, vector_layer):
+
+        # Check layer validity
+        if not vector_layer.isValid():
+            self.giveWarningMessage("Invalid vector layer!")
+
+        else:
+
+            # Check origin layer geometry
+            if vector_layer.wkbType() == 7:
+                self.giveWarningMessage("Layer contains geometry collection!")
+
+            # Check if layer contains points
+            elif not vector_layer.wkbType() == 1 or vector_layer.wkbType() == 4:
+                geom_type = 'point'
+
+            # Check if layer contains lines
+            elif not vector_layer.wkbType() == 2 or vector_layer.wkbType() == 5:
+                geom_type = 'line'
+
+            # Check if layer contains polygons
+            elif not vector_layer.wkbType() == 3 or vector_layer.wkbType() == 6:
+                geom_type = 'polygon'
+
+        return geom_type
+
+    def createTempLayer(self, name, geometry, srid, attributes, types):
+
+        # Geometry can be 'POINT', 'LINESTRING' or 'POLYGON' or the 'MULTI' version of the previous
+        vlayer = QgsVectorLayer('%s?crs=EPSG:%s' % (geometry, srid), name, "memory")
+        provider = vlayer.dataProvider()
+
+        # Create the required fields
+        if attributes:
+            vlayer.startEditing()
+            fields = []
+            for i, att in enumerate(attributes):
+                fields.append(QgsField(att, types[i]))
+
+            # add the fields to the layer
+            try:
+                provider.addAttributes(fields)
+            except:
+                return None
+            vlayer.commitChanges()
+
+        return vlayer
+
+    def insertTempFeatures(self, layer, geometry, attributes):
+        provider = layer.dataProvider()
+        geometry_type = provider.geometryType()
+        for i, geom in enumerate(geometry):
+            fet = QgsFeature()
+            if geometry_type in (1, 4):
+                fet.setGeometry(QgsGeometry.fromPoint(geom))
+            elif geometry_type in (2, 5):
+                fet.setGeometry(QgsGeometry.fromPolyline(geom))
+            elif geometry_type in (3, 6):
+                fet.setGeometry(QgsGeometry.fromPolygon(geom))
+            if attributes:
+                fet.setAttributes(attributes[i])
+            provider.addFeatures([fet])
+        provider.updateExtents()
