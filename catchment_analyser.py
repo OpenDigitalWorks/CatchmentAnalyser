@@ -38,6 +38,9 @@ from qgis.utils import *
 # Import tool classes
 import catchment_tools
 
+# Import utility tools
+from utility_functions import *
+
 # Import the debug library
 # set is_debug to False in release version
 is_debug = True
@@ -61,11 +64,10 @@ class CatchmentAnalyser:
         """
         # Save reference to the QGIS interface
         self.iface = iface
-        # initialize plugin directory
+        # Initialize plugin directory
         self.plugin_dir = os.path.dirname(__file__)
-
+        # Initialize analysis
         self.catchmentAnalysis = catchment_tools.catchmentAnalysis(self.iface)
-
         # initialize locale
         locale = QSettings().value('locale/userLocale')[0:2]
         locale_path = os.path.join(
@@ -82,6 +84,7 @@ class CatchmentAnalyser:
 
         # Create the dialog (after translation) and keep reference
         self.dlg = CatchmentAnalyserDialog()
+        #
 
         # Declare instance attributes
         self.actions = []
@@ -92,6 +95,10 @@ class CatchmentAnalyser:
         # Setup debugger
         if has_pydevd and is_debug:
             pydevd.settrace('localhost', port=53100, stdoutToServer=True, stderrToServer=True, suspend=False)
+
+        # Setup GUI signals
+        self.dlg.visibilityChanged.connect(self.onShow)
+        self.dlg.analysisButton.clicked.connect(self.runAnalysis)
 
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
@@ -107,7 +114,6 @@ class CatchmentAnalyser:
         """
         # noinspection PyTypeChecker,PyArgumentList,PyCallByClass
         return QCoreApplication.translate('CatchmentAnalyser', message)
-
 
     def add_action(
         self,
@@ -192,7 +198,6 @@ class CatchmentAnalyser:
             callback=self.run,
             parent=self.iface.mainWindow())
 
-
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""
         for action in self.actions:
@@ -203,6 +208,50 @@ class CatchmentAnalyser:
         # remove the toolbar
         del self.toolbar
 
+    def onShow(self):
+        self.updateLayers()
+
+
+    def updateLayers(self):
+        # Layer names by geometry type
+        network_layers = []
+        origins_layers = []
+        # Get layers
+        network_layers.extend(uf.getLegendLayers(geom=1))
+        origins_layers.extend(uf.getLegendLayers())
+        # Populate dialog
+        self.dlg.setNetworkLayers(network_layers)
+        self.dlg.setOriginLayers(origins_layers)
+
+    def updateFields(self):
+        # Field names by type
+        cost_fields = []
+        name_fields = []
+        # Get fields
+        cost_fields.extend(uf.getNumericFieldNames())
+        name_fields.extend(uf.getNumericFieldNames())
+        # Populate dialog
+        self.dlg.setCostFields(cost_fields)
+        self.dlg.setNameFields(name_fields)
+
+    def getAnalysisSettings(self):
+        # Creating a combined settings dictionary
+        settings = {}
+        # Get settings from the dialog
+        settings['network'] = self.dlg.getNetwork()
+        settings['cost'] = self.dlg.getCostField()
+        settings['origins'] = self.dlg.getOrigins()
+        settings['name'] = self.dlg.getName()
+        settings['distances'] = self.dlg.getDistance()
+        settings['network tolerance'] = self.dlg.getNetworkTolerance()
+        settings['polygon tolerance'] = self.dlg.getPolygonTolerance()
+        settings['network output'] = self.dlg.getNetworkOutput()
+        settings['polygon output'] = self.dlg.getPolygonOutput()
+
+        return settings
+
+    def runAnalysis(self):
+        pass
 
     def run(self):
         """Run method that performs all the real work"""
@@ -257,7 +306,6 @@ class CatchmentAnalyser:
             # Run Analysis
 
             pass
-
 
     def close_method(self):
         self.dlg.close()

@@ -40,63 +40,105 @@ class CatchmentAnalyserDialog(QtGui.QDialog, FORM_CLASS):
         # #widgets-and-dialogs-with-auto-connect
         self.setupUi(self)
 
-        # Network GUI signals
-        self.choose_network.activated.connect(self.choose_network) # no repeating names
-        self.check_cost.stateChanged.connect(self.browse_cost_fields)
-        self.choose_cost.activated.connect(self.choose_cost)
+        # Network internal GUI signals
+        self.costCheck.stateChanged.connect(self.setCostFields)
 
-        # Origin GUI signals
-        self.choose_origins.activated.connect(self.choose_origins)
-        self.check_name.stateChanged.connect(self.browse_name_fields)
-        self.choose_name.activated.connect(self.choose_name_field)
 
-        # Output GUI signals
-        self.path_output_network.setPlaceholderText("Save as temporary layer...")
-        self.browse_output_network.clicked.connect(self.browse_output_network)
-        self.path_output_polygon.setPlaceholderText("Save as temporary layer...")
-        self.browse_output_polygon.clicked.connect(self.browse_output_polygon)
+        # Origin internal GUI signals
+        self.nameCheck.stateChanged.connect(self.setNameFields)
+        self.nameCombo.activated.connect(self.choose_name_field)
+
+        # Output internal GUI signals
+        self.networkText.setPlaceholderText("Save as temporary layer...")
+        self.networkSaveButton.clicked.connect(self.setNetworkOutput)
+        self.polygonText.setPlaceholderText("Save as temporary layer...")
+        self.polygonSaveButton.clicked.connect(self.setPolygonOutput)
 
         # connect the run button
-        self.run_mca.clicked.connect(self.run_analysis)
+        self.analysisButton.clicked.connect(self.run_analysis)
 
         # setup the progress bar
-        self.progress_mca.setMinimum(0)
-        self.progress_mca.setMaximum(5)
+        self.analysisProgress.setMinimum(0)
+        self.analysisProgress.setMaximum(5)
 
-    def choose_network(self):
-        pass
+    def setNetworkLayers(self, names):
+        layers = ['-----']
+        if names:
+            layers.extend(names)
+        self.networkCombo.clear()
+        self.networkCombo.addItems(layers)
 
-    def browse_cost_fields(self):
-        pass
+    def getNetwork(self):
+        return self.networkCombo.currentText()
 
-    def choose_cost_fields(self):
-        pass
+    def setCostFields(self,names):
+        if self.costCheck.isChecked():
+            self.costCombo.setEnabled()
+            fields = ['-----']
+            if names:
+                fields.extend(names)
+            self.costCombo.clear()
+            self.costCombo.addItems(names)
 
-    def choose_origin(self):
-        pass
+    def getCostField(self):
+        if self.costCheck.isChecked():
+            cost_field = self.costCombo.currentText()
+        else:
+            cost_field = None
+        return cost_field
 
-    def browse_name_fields(self):
-        pass
+    def setOriginLayers(self, names):
+        layers = ['-----']
+        if names:
+            layers.extend(names)
+        self.originsCombo.clear()
+        self.originsCombo.addItems(layers)
 
-    def choose_name_field(self):
-        pass
+    def getOrigins(self):
+        return self.originsCombo.currentText()
 
-    def browse_output_network(self):
-        pass
+    def setNameFields(self, names):
+        if self.nameCheck.isChecked():
+            self.nameCombo.setEnabled()
+            fields = ['-----']
+            if names:
+                fields.extend(names)
+            self.nameCombo.clear()
+            self.nameCombo.addItems(names)
 
-    def browse_output_polygon(self):
-        pass
+    def getName(self):
+        return self.nameCombo.currentText()
+
+    def getDistances(self):
+        distances = []
+        # split radii based on spaces and commas
+
+        return self.distancesText.text()
+
+    def getNetworkTolerance(self):
+        return self.networkTolSpin.currentText()
+
+    def getPolygonTolerance(self):
+        return self.polygonTolSpin.currentText()
+
+    def setNetworkOutput(self):
+        file_name = QFileDialog.getSaveFileName(self, "Save output file ", "catchment_network", '*.shp')
+        if file_name:
+            self.networkText.setText(file_name)
+
+    def getNetworkOutput(self):
+        return self.networkText.text()
+
+    def setPolygonOutput(self):
+        file_name = QFileDialog.getSaveFileName(self, "Save output file ", "catchment_network", '*.shp')
+        if file_name:
+            self.polygonText.setText(file_name)
+
+    def getPolygonOutput(self):
+        return self.polygonText.text()
 
 
 
-
-
-
-    def updateLayers(self):
-        pass
-
-    def getLayer(self):
-        pass
 
 
 

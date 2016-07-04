@@ -8,6 +8,8 @@ from qgis.utils import *
 
 import math
 
+from utility_functions import *
+
 class customCost(QgsArcProperter):
     def __init__(self, costColumIndex, defaultValue):
         QgsArcProperter.__init__(self)
@@ -429,25 +431,25 @@ class catchmentAnalysis(QObject):
         unlink_index = QgsSpatialIndex()
 
         # Output network
-        network = self.createTempLayer('network','LINESTRING', network_crs,['cost',],[QVariant.Int,])
+        network = uf.createTempLayer('network','LINESTRING', network_crs,['cost',],[QVariant.Int,])
 
         if not network_vector:
-            self.giveWarningMessage("No network layer selected!")
+            uf.giveWarningMessage("No network layer selected!")
 
         else:
 
             # Check network layer validity
             if not network_vector.isValid():
-                self.giveWarningMessage("Invalid network layer!")
+                uf.giveWarningMessage("Invalid network layer!")
 
             # Check if network layer contains lines
             elif not (network_vector.wkbType() == 2 or network_vector.wkbType() == 5):
-                self.giveWarningMessage("Network layer contains no lines!")
+                uf.giveWarningMessage("Network layer contains no lines!")
 
         # Check unlink layer geometry type
         if unlink_vector:
 
-            origin_type = self.getGeomType(unlink_vector)
+            origin_type = uf.getGeomType(unlink_vector)
 
         # If network is not topological start segmentation
         if topology_bool == False:
@@ -549,7 +551,7 @@ class catchmentAnalysis(QObject):
                         line_cost = line_geom.length() * cost_ratio
                     else:
                         line_cost = ''
-                    self.insertTempFeatures(network,line_geom,line_cost)
+                    uf.insertTempFeatures(network,line_geom,line_cost)
 
                 # Check if first segment is a potential stub
                 for point in break_points:
@@ -568,7 +570,7 @@ class catchmentAnalysis(QObject):
                                 line_cost = line_geom.length() * cost_ratio
                             else:
                                 line_cost = ''
-                            self.insertTempFeatures(network, line_geom, line_cost)
+                            uf.insertTempFeatures(network, line_geom, line_cost)
 
                     # Check if last segment is a potential stub
                     elif point != seg_end_point:
@@ -586,7 +588,7 @@ class catchmentAnalysis(QObject):
                             else:
                                 line_cost = ''
 
-                            self.insertTempFeatures(network, line_geom, line_cost)
+                            uf.insertTempFeatures(network, line_geom, line_cost)
 
         # If topological network add all segments of the network layer straight away
         else:
@@ -600,7 +602,7 @@ class catchmentAnalysis(QObject):
                     line_cost = line_geom.length() * cost_ratio
                 else:
                     line_cost = ''
-                self.insertTempFeatures(network, line_geom, line_cost)
+                uf.insertTempFeatures(network, line_geom, line_cost)
 
         return network
 
@@ -611,12 +613,12 @@ class catchmentAnalysis(QObject):
 
         # Check origin layer validity
         if not origin_vector.isValid():
-            self.giveWarningMessage("Invalid origin layer!")
+            uf.giveWarningMessage("Invalid origin layer!")
 
         else:
 
             # Check geometry type of origin layer
-            origin_type = self.getGeomType(origin_vector)
+            origin_type = uf.getGeomType(origin_vector)
 
             # Loop through origin and get or create points
             for i,f in enumerate(origin_vector.getFeatures()):
@@ -928,75 +930,3 @@ class catchmentAnalysis(QObject):
 
         # add catchment to the canvas
         QgsMapLayerRegistry.instance().addMapLayer(output_polygon)
-
-    def giveWarningMessage(self, message):
-        # Gives warning according to message
-        self.iface.messageBar().pushMessage(
-            "Catchment Analyser: ",
-            "%s" % (message),
-            level=QgsMessageBar.WARNING,
-            duration=5)
-
-    def getGeomType(self, vector_layer):
-
-        # Check layer validity
-        if not vector_layer.isValid():
-            self.giveWarningMessage("Invalid vector layer!")
-
-        else:
-
-            # Check origin layer geometry
-            if vector_layer.wkbType() == 7:
-                self.giveWarningMessage("Layer contains geometry collection!")
-
-            # Check if layer contains points
-            elif not vector_layer.wkbType() == 1 or vector_layer.wkbType() == 4:
-                geom_type = 'point'
-
-            # Check if layer contains lines
-            elif not vector_layer.wkbType() == 2 or vector_layer.wkbType() == 5:
-                geom_type = 'line'
-
-            # Check if layer contains polygons
-            elif not vector_layer.wkbType() == 3 or vector_layer.wkbType() == 6:
-                geom_type = 'polygon'
-
-        return geom_type
-
-    def createTempLayer(self, name, geometry, srid, attributes, types):
-
-        # Geometry can be 'POINT', 'LINESTRING' or 'POLYGON' or the 'MULTI' version of the previous
-        vlayer = QgsVectorLayer('%s?crs=EPSG:%s' % (geometry, srid), name, "memory")
-        provider = vlayer.dataProvider()
-
-        # Create the required fields
-        if attributes:
-            vlayer.startEditing()
-            fields = []
-            for i, att in enumerate(attributes):
-                fields.append(QgsField(att, types[i]))
-
-            # add the fields to the layer
-            try:
-                provider.addAttributes(fields)
-            except:
-                return None
-            vlayer.commitChanges()
-
-        return vlayer
-
-    def insertTempFeatures(self, layer, geometry, attributes):
-        provider = layer.dataProvider()
-        geometry_type = provider.geometryType()
-        for i, geom in enumerate(geometry):
-            fet = QgsFeature()
-            if geometry_type in (1, 4):
-                fet.setGeometry(QgsGeometry.fromPoint(geom))
-            elif geometry_type in (2, 5):
-                fet.setGeometry(QgsGeometry.fromPolyline(geom))
-            elif geometry_type in (3, 6):
-                fet.setGeometry(QgsGeometry.fromPolygon(geom))
-            if attributes:
-                fet.setAttributes(attributes[i])
-            provider.addFeatures([fet])
-        provider.updateExtents()
