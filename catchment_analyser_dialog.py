@@ -46,7 +46,7 @@ class CatchmentAnalyserDialog(QtGui.QDialog, FORM_CLASS):
 
         # Origin internal GUI signals
         self.nameCheck.stateChanged.connect(self.setNameFields)
-        self.nameCombo.activated.connect(self.choose_name_field)
+        self.nameCombo.activated.connect(self.setCostFields)
 
         # Output internal GUI signals
         self.networkText.setPlaceholderText("Save as temporary layer...")
@@ -55,7 +55,7 @@ class CatchmentAnalyserDialog(QtGui.QDialog, FORM_CLASS):
         self.polygonSaveButton.clicked.connect(self.setPolygonOutput)
 
         # connect the run button
-        self.analysisButton.clicked.connect(self.run_analysis)
+        self.analysisButton.clicked.connect(self.runAnalysis)
 
         # setup the progress bar
         self.analysisProgress.setMinimum(0)
@@ -137,7 +137,8 @@ class CatchmentAnalyserDialog(QtGui.QDialog, FORM_CLASS):
     def getPolygonOutput(self):
         return self.polygonText.text()
 
-
+    def runAnalysis(self):
+        pass
 
 
 

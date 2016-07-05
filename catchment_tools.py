@@ -8,7 +8,7 @@ from qgis.utils import *
 
 import math
 
-from utility_functions import *
+import utility_functions as uf
 
 class customCost(QgsArcProperter):
     def __init__(self, costColumIndex, defaultValue):

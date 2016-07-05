@@ -39,7 +39,7 @@ from qgis.utils import *
 import catchment_tools
 
 # Import utility tools
-from utility_functions import *
+import utility_functions as uf
 
 # Import the debug library
 # set is_debug to False in release version
@@ -94,11 +94,13 @@ class CatchmentAnalyser:
         self.toolbar.setObjectName(u'CatchmentAnalyser')
         # Setup debugger
         if has_pydevd and is_debug:
-            pydevd.settrace('localhost', port=53100, stdoutToServer=True, stderrToServer=True, suspend=False)
+            pydevd.settrace('localhost', port=53100, stdoutToServer=True, stderrToServer=True, suspend=True)
 
         # Setup GUI signals
-        self.dlg.visibilityChanged.connect(self.onShow)
+        self.dlg.networkCombo.activated.connect(self.updateLayers)
+
         self.dlg.analysisButton.clicked.connect(self.runAnalysis)
+
 
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
@@ -213,30 +215,38 @@ class CatchmentAnalyser:
 
 
     def updateLayers(self):
+
         # Layer names by geometry type
         network_layers = []
         origins_layers = []
+
         # Get layers
-        network_layers.extend(uf.getLegendLayers(geom=1))
+        network_layers.extend(uf.getLegendLayers(iface, geom='all', provider='all'))
         origins_layers.extend(uf.getLegendLayers())
+        print "poooo"
         # Populate dialog
         self.dlg.setNetworkLayers(network_layers)
         self.dlg.setOriginLayers(origins_layers)
 
     def updateFields(self):
+
         # Field names by type
         cost_fields = []
         name_fields = []
+
         # Get fields
         cost_fields.extend(uf.getNumericFieldNames())
         name_fields.extend(uf.getNumericFieldNames())
+
         # Populate dialog
         self.dlg.setCostFields(cost_fields)
         self.dlg.setNameFields(name_fields)
 
     def getAnalysisSettings(self):
+
         # Creating a combined settings dictionary
         settings = {}
+
         # Get settings from the dialog
         settings['network'] = self.dlg.getNetwork()
         settings['cost'] = self.dlg.getCostField()
@@ -247,52 +257,70 @@ class CatchmentAnalyser:
         settings['polygon tolerance'] = self.dlg.getPolygonTolerance()
         settings['network output'] = self.dlg.getNetworkOutput()
         settings['polygon output'] = self.dlg.getPolygonOutput()
+        settings['crs'] = self.dlg.getNetwork().crs()
+        settings['epsg'] = self.dlg.getNetwork().crs().authid()
 
         return settings
 
-    def runAnalysis(self):
-        pass
+    def runAnalysis(self, settings):
+
+        # Prepare the origins
+        origins = self.catchmentAnalysis.origin_preparation(
+            settings['origins'],
+            settings['name']
+        )
+
+        # Build the graph
+        graph, tied_origins = self.catchmentAnalysis.graph_builder(
+            settings['network'],
+            settings['cost'],
+            origins,
+            settings['network tolerance']
+        )
+
+        # Run the analysis
+        catchment_network, catchment_points = self.catchmentAnalysis.graph_analysis(
+            graph,
+            tied_origins,
+            settings['distances']
+        )
+
+        # Write and render the catchment network
+        if self.dlg.networkCheck.isChecked():
+
+            network_layer = nf.createTempLayer(
+                'catchment_network',
+                'LINESTRING',
+                settings['epsg'],
+                [],
+                [],
+            )
+            output_network = self.catchmentAnalysis.network_writer(origins,catchment_network,network_layer)
+            self.catchmentAnalysis.network_renderer(output_network, settings['distance'])
+
+        # Write and render the catchment polygons
+        if self.dlg.polygonCheck.isChecked():
+            polygon_layer = nf.createTempLayer(
+                'catchment_polygon',
+                'POLYGON',
+                settings['epsg'],
+                [],
+                [],
+            )
+            output_polygon = self.catchmentAnalysis.polygon_writer(
+                catchment_points,
+                settings['distances'],
+                polygon_layer,
+                settings['polygon tolerance']
+            )
+            self.catchmentAnalysis.polygon_renderer(output_polygon)
 
     def run(self):
         """Run method that performs all the real work"""
         # show the dialog
         self.dlg.show()
 
-        # Setup dialog
 
-
-
-        # Test files
-        network_vector = QgsVectorLayer("/Users/laurensversluis/Desktop/sample data/lines.shp", "network", "ogr")
-
-        origin_vector = QgsVectorLayer("/Users/laurensversluis/Desktop/sample data/origin_polygon.shp", "network",
-                                       "ogr")
-
-        unlink_vector = QgsVectorLayer("/Users/laurensversluis/Desktop/sample data/origin_point.shp", "network",
-
-                                       "ogr")
-        # Test variables
-        topology_bool = False
-        stub_ratio = 0.4
-        origin_name_field = 'name'
-        tolerance = 1
-        cost_field = 'cost'
-
-        # Test environments
-        network, network_epsg = self.catchmentAnalysis.network_preparation(network_vector,
-                                                                           cost_field,
-                                                                           unlink_vector,
-                                                                           topology_bool,
-                                                                           stub_ratio)
-
-        origins = self.catchmentAnalysis.origin_preparation(origin_vector,
-                                                            origin_name_field)
-
-        graph, tied_origins = self.catchmentAnalysis.graph_builder(network_vector,
-                                                                   network_cost_index,
-                                                                   origins,
-                                                                   tolerance,
-                                                                   network_epsg)
 
         # Run the dialog event loop
         result = self.dlg.exec_()
@@ -307,5 +335,3 @@ class CatchmentAnalyser:
 
             pass
 
-    def close_method(self):
-        self.dlg.close()
