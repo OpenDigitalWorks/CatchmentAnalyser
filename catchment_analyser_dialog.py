@@ -40,22 +40,12 @@ class CatchmentAnalyserDialog(QtGui.QDialog, FORM_CLASS):
         # #widgets-and-dialogs-with-auto-connect
         self.setupUi(self)
 
-        # Network internal GUI signals
-        self.costCheck.stateChanged.connect(self.setCostFields)
-
-
-        # Origin internal GUI signals
-        self.nameCheck.stateChanged.connect(self.setNameFields)
-        self.nameCombo.activated.connect(self.setCostFields)
 
         # Output internal GUI signals
         self.networkText.setPlaceholderText("Save as temporary layer...")
         self.networkSaveButton.clicked.connect(self.setNetworkOutput)
         self.polygonText.setPlaceholderText("Save as temporary layer...")
         self.polygonSaveButton.clicked.connect(self.setPolygonOutput)
-
-        # connect the run button
-        self.analysisButton.clicked.connect(self.runAnalysis)
 
         # setup the progress bar
         self.analysisProgress.setMinimum(0)
@@ -64,21 +54,26 @@ class CatchmentAnalyserDialog(QtGui.QDialog, FORM_CLASS):
     def setNetworkLayers(self, names):
         layers = ['-----']
         if names:
+            layers = []
             layers.extend(names)
         self.networkCombo.clear()
         self.networkCombo.addItems(layers)
 
+
     def getNetwork(self):
         return self.networkCombo.currentText()
 
-    def setCostFields(self,names):
+
+    def setCostFields(self, names):
         if self.costCheck.isChecked():
-            self.costCombo.setEnabled()
+            self.costCombo.setEnabled(True)
             fields = ['-----']
             if names:
+                fields = []
                 fields.extend(names)
             self.costCombo.clear()
             self.costCombo.addItems(names)
+
 
     def getCostField(self):
         if self.costCheck.isChecked():
@@ -87,58 +82,65 @@ class CatchmentAnalyserDialog(QtGui.QDialog, FORM_CLASS):
             cost_field = None
         return cost_field
 
+
     def setOriginLayers(self, names):
         layers = ['-----']
         if names:
+            layers = []
             layers.extend(names)
         self.originsCombo.clear()
         self.originsCombo.addItems(layers)
 
+
     def getOrigins(self):
         return self.originsCombo.currentText()
 
+
     def setNameFields(self, names):
         if self.nameCheck.isChecked():
-            self.nameCombo.setEnabled()
+            self.nameCombo.setEnabled(True)
             fields = ['-----']
             if names:
                 fields.extend(names)
             self.nameCombo.clear()
             self.nameCombo.addItems(names)
 
+
     def getName(self):
         return self.nameCombo.currentText()
 
-    def getDistances(self):
-        distances = []
-        # split radii based on spaces and commas
 
-        return self.distancesText.text()
+    def getDistances(self):
+        return [self.distancesText.text().split(',')]
+
 
     def getNetworkTolerance(self):
-        return self.networkTolSpin.currentText()
+        return self.networkTolSpin.value()
+
 
     def getPolygonTolerance(self):
-        return self.polygonTolSpin.currentText()
+        return self.polygonTolSpin.value()
+
 
     def setNetworkOutput(self):
-        file_name = QFileDialog.getSaveFileName(self, "Save output file ", "catchment_network", '*.shp')
+        file_name = QtGui.QFileDialog.getSaveFileName(self, "Save output file ", "catchment_network", '*.shp')
         if file_name:
             self.networkText.setText(file_name)
+
 
     def getNetworkOutput(self):
         return self.networkText.text()
 
+
     def setPolygonOutput(self):
-        file_name = QFileDialog.getSaveFileName(self, "Save output file ", "catchment_network", '*.shp')
+        file_name = QtGui.QFileDialog.getSaveFileName(self, "Save output file ", "catchment_polygon", '*.shp')
         if file_name:
             self.polygonText.setText(file_name)
+
 
     def getPolygonOutput(self):
         return self.polygonText.text()
 
-    def runAnalysis(self):
-        pass
 
 
 

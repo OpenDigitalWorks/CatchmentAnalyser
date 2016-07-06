@@ -43,7 +43,7 @@ import utility_functions as uf
 
 # Import the debug library
 # set is_debug to False in release version
-is_debug = True
+is_debug = False
 try:
     import pydevd
     has_pydevd = True
@@ -64,6 +64,7 @@ class CatchmentAnalyser:
         """
         # Save reference to the QGIS interface
         self.iface = iface
+        self.legend = self.iface.legendInterface()
         # Initialize plugin directory
         self.plugin_dir = os.path.dirname(__file__)
         # Initialize analysis
@@ -84,8 +85,6 @@ class CatchmentAnalyser:
 
         # Create the dialog (after translation) and keep reference
         self.dlg = CatchmentAnalyserDialog()
-        #
-
         # Declare instance attributes
         self.actions = []
         self.menu = self.tr(u'&Catchment Analyser')
@@ -97,10 +96,13 @@ class CatchmentAnalyser:
             pydevd.settrace('localhost', port=53100, stdoutToServer=True, stderrToServer=True, suspend=True)
 
         # Setup GUI signals
-        self.dlg.networkCombo.activated.connect(self.updateLayers)
-
+        self.dlg.networkCombo.activated.connect(self.updateCost)
+        self.dlg.originsCombo.activated.connect(self.updateName)
+        self.dlg.costCheck.stateChanged.connect(self.updateCost)
+        self.dlg.nameCheck.stateChanged.connect(self.updateName)
         self.dlg.analysisButton.clicked.connect(self.runAnalysis)
-
+        self.legend.itemAdded.connect(self.updateLayers)
+        self.legend.itemRemoved.connect(self.updateLayers)
 
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
@@ -213,34 +215,37 @@ class CatchmentAnalyser:
     def onShow(self):
         self.updateLayers()
 
-
     def updateLayers(self):
+        self.updateNetwork()
+        self.updateOrigins()
 
-        # Layer names by geometry type
-        network_layers = []
-        origins_layers = []
-
-        # Get layers
-        network_layers.extend(uf.getLegendLayers(iface, geom='all', provider='all'))
-        origins_layers.extend(uf.getLegendLayers())
-        print "poooo"
-        # Populate dialog
+    def updateNetwork(self):
+        network_layers = uf.getLegendLayersNames(iface, geom=[1,], provider='all')
         self.dlg.setNetworkLayers(network_layers)
+        self.updateCost()
+
+    def updateOrigins(self):
+        origins_layers = uf.getLegendLayersNames(iface, geom='all', provider='all')
         self.dlg.setOriginLayers(origins_layers)
+        self.updateName()
 
-    def updateFields(self):
+    def updateCost(self):
+        if self.dlg.costCheck.isChecked():
+            network = uf.getLegendLayerByName(iface, self.dlg.getNetwork())
+            self.dlg.setCostFields(uf.getFieldNames(network))
+        else:
+            self.dlg.costCombo.clear()
+            self.dlg.costCombo.setEnabled(False)
 
-        # Field names by type
-        cost_fields = []
-        name_fields = []
 
-        # Get fields
-        cost_fields.extend(uf.getNumericFieldNames())
-        name_fields.extend(uf.getNumericFieldNames())
+    def updateName(self):
+        if self.dlg.nameCheck.isChecked():
+            origins = uf.getLegendLayerByName(iface, self.dlg.getOrigins())
+            self.dlg.setNameFields(uf.getFieldNames(origins))
+        else:
+            self.dlg.nameCombo.clear()
+            self.dlg.nameCombo.setEnabled(False)
 
-        # Populate dialog
-        self.dlg.setCostFields(cost_fields)
-        self.dlg.setNameFields(name_fields)
 
     def getAnalysisSettings(self):
 
@@ -252,18 +257,20 @@ class CatchmentAnalyser:
         settings['cost'] = self.dlg.getCostField()
         settings['origins'] = self.dlg.getOrigins()
         settings['name'] = self.dlg.getName()
-        settings['distances'] = self.dlg.getDistance()
+        settings['distances'] = self.dlg.getDistances()
         settings['network tolerance'] = self.dlg.getNetworkTolerance()
         settings['polygon tolerance'] = self.dlg.getPolygonTolerance()
         settings['network output'] = self.dlg.getNetworkOutput()
         settings['polygon output'] = self.dlg.getPolygonOutput()
         settings['crs'] = self.dlg.getNetwork().crs()
         settings['epsg'] = self.dlg.getNetwork().crs().authid()
-
+        print settings
         return settings
 
-    def runAnalysis(self, settings):
+    def runAnalysis(self):
 
+        settings = self.getAnalysisSettings()
+        print settings
         # Prepare the origins
         origins = self.catchmentAnalysis.origin_preparation(
             settings['origins'],
@@ -317,9 +324,10 @@ class CatchmentAnalyser:
 
     def run(self):
         """Run method that performs all the real work"""
-        # show the dialog
+        # Show the dialog
         self.dlg.show()
-
+        # Update layers
+        self.updateLayers()
 
 
         # Run the dialog event loop
