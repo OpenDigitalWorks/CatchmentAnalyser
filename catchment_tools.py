@@ -755,8 +755,6 @@ class catchmentAnalysis(QObject):
         arc_length_list = []
         arc_cost_list = []
 
-        # Setup output network id column
-        output_network.dataProvider().addAttributes([QgsField("id", QVariant.Int)])
 
         # Setup all unique origin columns
         unique_origin_list = []
@@ -830,13 +828,6 @@ class catchmentAnalysis(QObject):
         unique_origin_list = []
         polygon_points = {}
 
-        # Setup output polygon table
-        output_polygon.dataProvider().addAttributes([
-            QgsField("id", QVariant.Int),
-            QgsField("origin", QVariant.Int),
-            QgsField("radius", QVariant.Int)])
-        output_network.updateFields()
-
         # Loop through origins and create list of aggregate polygon points
         for name in catchment_points:
 
@@ -870,7 +861,7 @@ class catchmentAnalysis(QObject):
                 p = QgsFeature()
                 p.setAttribute("id", index)
                 p.setAttribute("origin", name)
-                p.setAttribute("radius", radius)
+                p.setAttribute("distance", radius)
                 polygon_geom = QgsGeometry.fromWkt((concave_hull(points, alpha)).wkt())
                 p.setGeometry(polygon_geom)
                 output_polygon.dataProvider().addFeatures([p])

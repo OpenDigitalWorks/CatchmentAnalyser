@@ -24,6 +24,7 @@
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 from qgis.core import *
+from qgis.utils import *
 
 def getLegendLayers(iface, geom='all', provider='all'):
     """geometry types: 0 point; 1 line; 2 polygon; 3 multipoint; 4 multiline; 5 multipolygon"""
@@ -114,7 +115,7 @@ def getGeomType(self, vector_layer):
     return geom_type
 
 
-def createTempLayer(self, name, geometry, srid, attributes, types):
+def createTempLayer(name, geometry, srid, attributes, types):
     # Geometry can be 'POINT', 'LINESTRING' or 'POLYGON' or the 'MULTI' version of the previous
     vlayer = QgsVectorLayer('%s?crs=EPSG:%s' % (geometry, srid), name, "memory")
     provider = vlayer.dataProvider()
@@ -152,5 +153,13 @@ def insertTempFeatures(self, layer, geometry, attributes):
         provider.addFeatures([fet])
     provider.updateExtents()
 
-def splitString(string, separator):
-    return string.split(separator)
+
+def createShapeFile(layer, path, crs):
+    shapefile = QgsVectorFileWriter.writeAsVectorFormat(
+        layer,
+        r"%s" % path,
+        "utf-8",
+        crs,
+        "ESRI Shapefile"
+    )
+    return shapefile
