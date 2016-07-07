@@ -240,7 +240,7 @@ def mca(graph,
 			origin_field_name = str(origins_name.get(i))
 		else: 
 			origin_field_name = "origin_%s" % (i + 1)
-		output_network.dataProvider().addAttributes([QgsField("%s" % (origin_field_name), QVariant.Int)])
+		output_network.dataProvider().addAttributes([QgsField("%s" % origin_field_name, QVariant.Int)])
 		output_network.updateFields()
 		# run the graph builder for origin
 		(tree, cost) = QgsGraphAnalyzer.dijkstra(graph, origin_vertex_id, 0)

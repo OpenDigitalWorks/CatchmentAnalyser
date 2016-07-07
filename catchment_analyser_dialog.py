@@ -111,7 +111,9 @@ class CatchmentAnalyserDialog(QtGui.QDialog, FORM_CLASS):
 
 
     def getDistances(self):
-        return [self.distancesText.text().split(',')]
+        distances_text = self.distancesText.text().split(',')
+        distances_integer = [int(i) for i in distances_text]
+        return distances_integer
 
 
     def getNetworkTolerance(self):

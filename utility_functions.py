@@ -80,7 +80,7 @@ def getFieldNames(layer):
     return field_names
 
 
-def giveWarningMessage(self, message):
+def giveWarningMessage(message):
     # Gives warning according to message
     self.iface.messageBar().pushMessage(
         "Catchment Analyser: ",
@@ -89,7 +89,7 @@ def giveWarningMessage(self, message):
         duration=5)
 
 
-def getGeomType(self, vector_layer):
+def getGeomType(vector_layer):
     # Check layer validity
     if not vector_layer.isValid():
         self.giveWarningMessage("Invalid vector layer!")
@@ -137,7 +137,7 @@ def createTempLayer(name, geometry, srid, attributes, types):
     return vlayer
 
 
-def insertTempFeatures(self, layer, geometry, attributes):
+def insertTempFeatures(layer, geometry, attributes):
     provider = layer.dataProvider()
     geometry_type = provider.geometryType()
     for i, geom in enumerate(geometry):

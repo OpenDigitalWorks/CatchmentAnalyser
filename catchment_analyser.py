@@ -43,7 +43,7 @@ import utility_functions as uf
 
 # Import the debug library
 # set is_debug to False in release version
-is_debug = True
+is_debug = False
 try:
     import pydevd
     has_pydevd = True
@@ -275,8 +275,8 @@ class CatchmentAnalyser:
                 'catchment_polygon',
                 'POLYGON',
                 epsg,
-                ['id','origin','distance'],
-                [QVariant.Int,QString,QVariant.Int]
+                ['id', 'origin', 'distance'],
+                [QVariant.Int, QVariant.Int, QVariant.Int]
             )
             return output_polygon
 
@@ -292,11 +292,11 @@ class CatchmentAnalyser:
         settings['name'] = self.dlg.getName()
         settings['distances'] = self.dlg.getDistances()
         settings['network tolerance'] = self.dlg.getNetworkTolerance()
-        settings['polygon tolerance'] = self.dlg.getPolygonTolerance()
+        settings['polygon tolerance'] = int(self.dlg.getPolygonTolerance())
         settings['crs'] = self.getNetwork().crs()
         settings['epsg'] = self.getNetwork().crs().authid()
-        settings['temp network'] = self.tempNetwork(settings['epsg'])
-        settings['temp polygon'] = self.tempPolygon(settings['epsg'])
+        settings['temp network'] = self.tempNetwork(str(settings['epsg']).replace("EPSG:", ''))
+        settings['temp polygon'] = self.tempPolygon(str(settings['epsg']).replace("EPSG:", ''))
 
         return settings
 
@@ -314,8 +314,10 @@ class CatchmentAnalyser:
         graph, tied_origins = self.catchmentAnalysis.graph_builder(
             settings['network'],
             settings['cost'],
-            settings['origins'],
-            settings['network tolerance']
+            origins,
+            settings['network tolerance'],
+            settings['crs'],
+            settings['epsg']
         )
 
         # Run the analysis
@@ -326,21 +328,23 @@ class CatchmentAnalyser:
         )
 
         # Write and render the catchment network
-        output_network = self.catchmentAnalysis.network_writer(
-            origins,
-            catchment_network,
-            settings['temp network']
-        )
-        self.catchmentAnalysis.network_renderer(output_network, settings['distance'])
+        if self.dlg.networkCheck.isChecked():
+            output_network = self.catchmentAnalysis.network_writer(
+                origins,
+                catchment_network,
+                settings['temp network']
+            )
+            self.catchmentAnalysis.network_renderer(output_network, settings['distances'])
 
         # Write and render the catchment polygons
-        output_polygon = self.catchmentAnalysis.polygon_writer(
-            catchment_points,
-            settings['distances'],
-            settings['temp polygon'],
-            settings['polygon tolerance']
-        )
-        self.catchmentAnalysis.polygon_renderer(output_polygon)
+        if self.dlg.polygonCheck.isChecked():
+            output_polygon = self.catchmentAnalysis.polygon_writer(
+                catchment_points,
+                settings['distances'],
+                settings['temp polygon'],
+                settings['polygon tolerance']
+            )
+            self.catchmentAnalysis.polygon_renderer(output_polygon)
 
     def run(self):
         """Run method that performs all the real work"""

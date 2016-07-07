@@ -28,19 +28,19 @@ class customCost(QgsArcProperter):
         return l
 
 class concaveHull():
-    def clean_list(list_of_points):
+    def clean_list(self, list_of_points):
         """
         Deletes duplicate points in list_of_points
         """
         return list(set(list_of_points))
 
-    def length(vector):
+    def length(self, vector):
         """
         Returns the number of elements in vector
         """
         return len(vector)
 
-    def find_min_y_point(list_of_points):
+    def find_min_y_point(self, list_of_points):
         """
         Returns that point of *list_of_points* having minimal y-coordinate
         :param list_of_points: list of tuples
@@ -52,21 +52,21 @@ class concaveHull():
                 min_y_pt = point
         return min_y_pt
 
-    def add_point(vector, element):
+    def add_point(self, vector, element):
         """
         Returns vector with the given element append to the right
         """
         vector.append(element)
         return vector
 
-    def remove_point(vector, element):
+    def remove_point(self, vector, element):
         """
         Returns a copy of vector without the given element
         """
         vector.pop(vector.index(element))
         return vector
 
-    def euclidian_distance(point1, point2):
+    def euclidian_distance(self, point1, point2):
         """
         Returns the euclidian distance of the 2 given points.
         :param point1: tuple (x, y)
@@ -75,12 +75,12 @@ class concaveHull():
         """
         return math.sqrt(math.pow(point1[0] - point2[0], 2) + math.pow(point1[1] - point2[1], 2))
 
-    def nearest_points(list_of_points, point, k):
+    def nearest_points(self, list_of_points, point, k):
         # build a list of tuples of distances between point *point* and every point in *list_of_points*, and
         # their respective index of list *list_of_distances*
         list_of_distances = []
         for index in range(len(list_of_points)):
-            list_of_distances.append((euclidian_distance(list_of_points[index], point), index))
+            list_of_distances.append((self.euclidian_distance(list_of_points[index], point), index))
 
         # sort distances in ascending order
         list_of_distances.sort()
@@ -91,7 +91,7 @@ class concaveHull():
             nearest_list.append((list_of_points[list_of_distances[index][1]]))
         return nearest_list
 
-    def angle(from_point, to_point):
+    def angle(self, from_point, to_point):
         """
         Returns the angle of the directed line segment, going from *from_point* to *to_point*, in radians. The angle is
         positive for segments with upward direction (north), otherwise negative (south). Values ranges from 0 at the
@@ -102,7 +102,7 @@ class concaveHull():
         """
         return math.atan2(to_point[1] - from_point[1], to_point[0] - from_point[0])
 
-    def angle_difference(angle1, angle2):
+    def angle_difference(self, angle1, angle2):
         """
         Calculates the difference between the given angles in clockwise direction as radians.
         :param angle1: float
@@ -124,7 +124,7 @@ class concaveHull():
         else:
             return 0
 
-    def intersect(line1, line2):
+    def intersect(self, line1, line2):
         """
         Returns True if the two given line segments intersect each other, and False otherwise.
         :param line1: 2-tuple of tuple (x, y)
@@ -150,7 +150,7 @@ class concaveHull():
             return False
         return True
 
-    def point_in_polygon_q(point, list_of_points):
+    def point_in_polygon_q(self, point, list_of_points):
         """
         Return True if given point *point* is laying in the polygon described by the vertices *list_of_points*,
         otherwise False
@@ -177,7 +177,7 @@ class concaveHull():
 
         return inside
 
-    def write_wkt(point_list, file_name):
+    def write_wkt(self, point_list, file_name):
         """
         Writes the geometry described by *point_list* in Well Known Text format to file
         :param point_list: list of tuples (x, y)
@@ -198,7 +198,7 @@ class concaveHull():
         outfile.close()
         return None
 
-    def as_wkt(point_list):
+    def as_wkt(self, point_list):
         """
         Returns the geometry described by *point_list* in Well Known Text format
         Example: hull = self.as_wkt(the_hull)
@@ -212,7 +212,7 @@ class concaveHull():
         wkt += '))'
         return wkt
 
-    def as_polygon(point_list):
+    def as_polygon(self, point_list):
         """
         Returns the geometry described by *point_list* in as QgsGeometry
         :param point_list: list of tuples (x, y)
@@ -224,7 +224,7 @@ class concaveHull():
         poly = QgsGeometry.fromPolygon([points])
         return poly
 
-    def enable_use_of_global_CRS():
+    def enable_use_of_global_CRS(self):
         """
         Set new layers to use the project CRS.
         Code snipped taken from http://pyqgis.blogspot.co.nz/2012/10/basics-automatic-use-of-crs-for-new.html
@@ -236,7 +236,7 @@ class concaveHull():
         settings.setValue('/Projections/defaultBehaviour', 'useProject')
         return old_behaviour
 
-    def disable_use_of_global_CRS(default_behaviour='prompt'):
+    def disable_use_of_global_CRS(self, default_behaviour='prompt'):
         """
         Enables old settings again. If argument is missing then set behaviour to prompt.
         Example: disable_use_of_global_CRS(old_behaviour)
@@ -247,7 +247,7 @@ class concaveHull():
         settings.setValue('/Projections/defaultBehaviour', default_behaviour)
         return None
 
-    def extract_points(geom):
+    def extract_points(self, geom):
         """
         Generate list of QgsPoints from QgsGeometry *geom* ( can be point, line, or polygon )
         Code taken from fTools plugin
@@ -288,14 +288,14 @@ class concaveHull():
                     temp_geom.extend(i)
         return temp_geom
 
-    def sort_by_angle(list_of_points, last_point, last_angle):
+    def sort_by_angle(self, list_of_points, last_point, last_angle):
         def getkey(item):
-            return angle_difference(last_angle, angle(last_point, item))
+            return self.angle_difference(last_angle, self.angle(last_point, item))
 
         vertex_list = sorted(list_of_points, key=getkey, reverse=True)
         return vertex_list
 
-    def concave_hull(points_list, k):
+    def concave_hull(self, points_list, k):
         """
         Calculates a valid concave hull polygon containing all given points. The algorithm searches for that
         point in the neighborhood of k nearest neighbors which maximizes the rotation angle in clockwise direction
@@ -316,7 +316,7 @@ class concaveHull():
         kk = max(k, 2)
 
         # delete duplicate points
-        point_set = clean_list(points_list)
+        point_set = self.clean_list(points_list)
 
         # if point_set has less then 3 points no polygon can be created and an empty list will be returned
         if len(point_set) < 3:
@@ -325,13 +325,13 @@ class concaveHull():
         # if point_set has 3 points then these are already vertices of the hull. Append the first point to
         # close the hull polygon
         if len(point_set) == 3:
-            return add_point(point_set, point_set[0])
+            return self.add_point(point_set, point_set[0])
 
         # make sure that k neighbours can be found
         kk = min(kk, len(point_set))
 
         # start with the point having the smallest y-coordinate (most southern point)
-        first_point = find_min_y_point(point_set)
+        first_point = self.find_min_y_point(point_set)
 
         # add this points as the first vertex of the hull
         hull = [first_point]
@@ -340,7 +340,7 @@ class concaveHull():
         current_point = first_point
 
         # remove the point from the point_set, to prevent him being among the nearest points
-        point_set = remove_point(point_set, first_point)
+        point_set = self.remove_point(point_set, first_point)
         previous_angle = math.pi
 
         # step counts the number of segments
@@ -351,14 +351,14 @@ class concaveHull():
 
             # after 3 iterations add the first point to point_set again, otherwise a hull cannot be closed
             if step == 5:
-                point_set = add_point(point_set, first_point)
+                point_set = self.add_point(point_set, first_point)
 
             # search the k nearest neighbors of the current point
-            k_nearest_points = nearest_points(point_set, current_point, kk)
+            k_nearest_points = self.nearest_points(point_set, current_point, kk)
 
             # sort the candidates (neighbors) in descending order of right-hand turn. This way the algorithm progresses
             # in clockwise direction through as many points as possible
-            c_points = sort_by_angle(k_nearest_points, current_point, previous_angle)
+            c_points = self.sort_by_angle(k_nearest_points, current_point, previous_angle)
 
             its = True
             i = -1
@@ -374,24 +374,24 @@ class concaveHull():
                 its = False
 
                 while its is False and (j < len(hull) - last_point):
-                    its = intersect((hull[step - 2], c_points[i]), (hull[step - 2 - j], hull[step - 1 - j]))
+                    its = self.intersect((hull[step - 2], c_points[i]), (hull[step - 2 - j], hull[step - 1 - j]))
                     j += 1
 
             # there is no candidate to which the connecting line does not intersect any existing segment, so the
             # for the next candidate fails. The algorithm starts again with an increased number of neighbors
             if its is True:
-                return concave_hull(points_list, kk + 1)
+                return self.concave_hull(points_list, kk + 1)
 
             # the first point which complies with the requirements is added to the hull and gets the current point
             current_point = c_points[i]
-            hull = add_point(hull, current_point)
+            hull = self.add_point(hull, current_point)
 
             # calculate the angle between the last vertex and his precursor, that is the last segment of the hull
             # in reversed direction
-            previous_angle = angle(hull[step - 1], hull[step - 2])
+            previous_angle = self.angle(hull[step - 1], hull[step - 2])
 
             # remove current_point from point_set
-            point_set = remove_point(point_set, current_point)
+            point_set = self.remove_point(point_set, current_point)
 
             # increment counter
             step += 1
@@ -401,12 +401,12 @@ class concaveHull():
 
         # check if all points are within the created polygon
         while (all_inside is True) and (i >= 0):
-            all_inside = point_in_polygon_q(point_set[i], hull)
+            all_inside = self.point_in_polygon_q(point_set[i], hull)
             i -= 1
 
         # since at least one point is out of the computed polygon, try again with a higher number of neighbors
         if all_inside is False:
-            return concave_hull(points_list, kk + 1)
+            return self.concave_hull(points_list, kk + 1)
 
         # a valid hull has been constructed
         return hull
@@ -418,267 +418,61 @@ class catchmentAnalysis(QObject):
         self.concave_hull = concaveHull()
         self.iface = iface
 
-    def network_preparation(self, network_vector, network_cost_field, unlink_vector, topology_bool, stub_ratio):
-
-        # Settings
-        unlink_buffer = 5
-
-        # Variables
-        network_crs = network_vector.crs()
-        network_epsg = network_crs.authid()
-        segment_index = QgsSpatialIndex()
-        segment_dict = {}
-        unlink_index = QgsSpatialIndex()
-
-        # Output network
-        network = uf.createTempLayer('network','LINESTRING', network_crs,['cost',],[QVariant.Int,])
-
-        if not network_vector:
-            uf.giveWarningMessage("No network layer selected!")
-
-        else:
-
-            # Check network layer validity
-            if not network_vector.isValid():
-                uf.giveWarningMessage("Invalid network layer!")
-
-            # Check if network layer contains lines
-            elif not (network_vector.wkbType() == 2 or network_vector.wkbType() == 5):
-                uf.giveWarningMessage("Network layer contains no lines!")
-
-        # Check unlink layer geometry type
-        if unlink_vector:
-
-            origin_type = uf.getGeomType(unlink_vector)
-
-        # If network is not topological start segmentation
-        if topology_bool == False:
-
-            # Insert segments of network to the spatial index and dictionary
-            for segment in network_vector.getFeatures():
-
-                # Add segment to spatial index
-                segment_index.insertFeature(segment)
-
-                # Create
-                segment_dict[segment.id()] = {'geom' : segment.geometryAndOwnership(), 'cost' : None}
-
-                # If exist append custom cost to segment dictionary
-                if network_cost_field:
-                    segment_dict[segment.id()]['cost'] = segment[network_cost_field]
-
-            # Create index of unlinks
-            if unlink_vector:
-                for unlink in unlink_vector.getFeatures():
-
-                    # Create unlink area when unlinks are points
-                    if origin_type == 'point':
-
-                        # Create unlink area 5m around the point
-                        unlink_geom = unlink.geometry().buffer(unlink_buffer, 5)
-                        unlink_area = QgsFeature()
-                        unlink_area.setGeometry(unlink_geom)
-
-                    # Create unlink area when unlinks are polygons or lines
-                    else:
-                        unlink_area = unlink
-
-                    # Add unlink to index and to dictionary
-                    unlink_index.insertFeature(unlink_area)
-
-            # Break each segment based on intersecting lines and unlinks
-            for segment_id, att in segment_dict.items():
-
-                # Get geometry, length, cost from segment
-                segment_geom = att['geom']
-                segment_length = segment_geom.length()
-
-                if network_cost_field:
-                    segment_cost = att['cost']
-
-                    # Calculate cost ratio
-                    cost_ratio = segment_length/segment_cost
-
-                # Get points from original segment
-                seg_start_point = segment_geom.asPolyline()[0]
-                seg_end_point = segment_geom.asPolyline()[-1]
-
-                # List of break points for the new segments
-                break_points = []
-
-                # Identify intersecting segments
-                intersecting_segments_ids = segment_index.intersects(segment_geom.boundingBox())
-
-                # Loop for intersecting segments excluding itself
-                for id in intersecting_segments_ids:
-
-                    # Skip if segment is itself
-                    if id == segment_id:
-                        continue
-
-                    # Break segment according to remaining intersecting segment
-                    else:
-
-                        # Get geometry of intersecting segment
-                        int_seg_geom = segment_dict[id]
-
-                        # Identify the construction point of the new segment
-                        if segment_geom.crosses(int_seg_geom) or segment_geom.touches(int_seg_geom):
-
-                            # Create point where lines cross
-                            point_geom = segment_geom.intersection(int_seg_geom)
-
-                            # Create polygon of inters
-                            point_buffer_geom = point_geom.buffer(1, 1).boundingBox()
-
-                            # Check if cross point is an unlink
-                            if not unlink_index.intersects(point_buffer_geom):
-                                # Break points of intersecting lines
-                                break_points.append(point_geom.asPoint())
-
-                # Sort break_points according to distance to start point
-                break_points.sort(key=lambda x: QgsDistanceArea().measureLine(seg_start_point, x))
-
-                # Create segments using break points
-                for i in range(0, len(break_points) - 1):
-                    # Set end points
-                    start_geom = QgsPoint(break_points[i])
-                    end_geom = QgsPoint(break_points[i + 1])
-
-                    # Create new geometry and cost and write to network
-                    line_geom = QgsGeometry.fromPolyline([start_geom, end_geom])
-                    if network_cost_field:
-                        line_cost = line_geom.length() * cost_ratio
-                    else:
-                        line_cost = ''
-                    uf.insertTempFeatures(network,line_geom,line_cost)
-
-                # Check if first segment is a potential stub
-                for point in break_points:
-
-                    if point != seg_start_point:
-
-                        # Calculate distance between point and start point
-                        distance_nearest_break = QgsDistanceArea().measureLine(seg_start_point, break_points[0])
-
-                        # Only add first segment if it is a dead end
-                        if distance_nearest_break > (stub_ratio * segment_length):
-
-                            # Create new geometry and cost and write to network
-                            line_geom = QgsGeometry.fromPolyline([seg_start_point, break_points[0]])
-                            if network_cost_field:
-                                line_cost = line_geom.length() * cost_ratio
-                            else:
-                                line_cost = ''
-                            uf.insertTempFeatures(network, line_geom, line_cost)
-
-                    # Check if last segment is a potential stub
-                    elif point != seg_end_point:
-
-                        # Calculate distance between point and end point
-                        distance_nearest_break = QgsDistanceArea().measureLine(seg_end_point, break_points[-1])
-
-                        # Only add last segment if it is a dead end
-                        if distance_nearest_break > (stub_ratio * segment_length):
-
-                            # Create new geometry and cost and write to network
-                            line_geom = QgsGeometry.fromPolyline([seg_end_point, break_points[-1]])
-                            if network_cost_field:
-                                line_cost = line_geom.length() * cost_ratio
-                            else:
-                                line_cost = ''
-
-                            uf.insertTempFeatures(network, line_geom, line_cost)
-
-        # If topological network add all segments of the network layer straight away
-        else:
-
-            # Loop through features and add them to network
-            for segment in network_vector.getFeatures():
-
-                # Create new geometry and cost and write to network
-                line_geom = segment.geometryAndOwnership()
-                if network_cost_field:
-                    line_cost = line_geom.length() * cost_ratio
-                else:
-                    line_cost = ''
-                uf.insertTempFeatures(network, line_geom, line_cost)
-
-        return network
 
     def origin_preparation(self, origin_vector, origin_name_field):
 
-        # Create a list of origin point dictionaries containing name and geometry
+        # Create a dictionary of origin point dictionaries containing name and geometry
         origins = []
 
-        # Check origin layer validity
-        if not origin_vector.isValid():
-            uf.giveWarningMessage("Invalid origin layer!")
+        # Check geometry type of origin layer
+        origin_type = uf.getGeomType(origin_vector)
 
-        else:
+        # Loop through origin and get or create points
+        for i, f in enumerate(origin_vector.getFeatures()):
 
-            # Check geometry type of origin layer
-            origin_type = uf.getGeomType(origin_vector)
+            # Get origin name
+            if origin_name_field:
+                origin_name = f[origin_name_field]
+            else:
+                origin_name = "origin_" + "%s" % (i+1)
 
-            # Loop through origin and get or create points
-            for i,f in enumerate(origin_vector.getFeatures()):
+            # Depending on type of origin create and append points
+            if origin_type == 'point':
+                origins.append({origin_name: f.geometry()})
 
-                # Create origin dictionary
-                origin = {}
+            elif origin_type == 'line' or origin_type == 'polygon':
+                origins.append({'name': origin_name, 'geom': f.geometry().centroid()})
 
-                # If origin name field is given get name
-                if origin_name_field:
-                    print f[origin_name_field]
-                    origin_name = f[origin_name_field]
+        return origins
 
-                # Otherwise use index as name
-                else:
-                    origin_name = i
-
-                # Depending on type of origin create and append points
-                if origin_type == 'point':
-                    origin[i] = {origin_name : f.geometry()}
-
-                elif origin_type == 'line' or origin_type == 'polygon':
-                    origin[i] = {"name" : origin_name, "geom" : f.geometry().centroid()}
-
-                # Append origin names and geometry to origin points list
-                origins.append(origin)
-
-            return origins
-
-    def graph_builder(self, network_vector, cost_field, origins, tolerance):
+    def graph_builder(self, network, cost_field, origins, tolerance, crs, epsg):
 
         # Settings
         otf = False
 
-        # Get projection of the network
-        network_crs = network_vector.crs()
-        network_epsg = network_crs.authid()
-
         # Get index of cost field
-        network_fields = network_vector.pendingFields()
+        network_fields = network.pendingFields()
         network_cost_index = network_fields.indexFromName(cost_field)
 
         # Setting up graph build director
-        director = QgsLineVectorLayerDirector(network_vector, -1, '', '', '', 3)
+        director = QgsLineVectorLayerDirector(network, -1, '', '', '', 3)
 
         # Determining cost calculation
-        if cost_field == True:
-            properter = customCost(network_cost_index,0)
+        if cost_field:
+            properter = customCost(network_cost_index, 0)
         else:
             properter = QgsDistanceArcProperter()
 
         # Creating graph builder
         director.addProperter(properter)
-        builder = QgsGraphBuilder(network_crs, otf, tolerance, network_epsg)
+        builder = QgsGraphBuilder(crs, otf, tolerance, epsg)
 
         # Reading origins and making list of coordinates
         graph_origin_points = []
 
         # Loop through the origin points and add graph vertex indices
         for index, origin in enumerate(origins):
-            graph_origin_points.append(origins[index]['name'])
+            graph_origin_points.append(origins[index]['geom'].asPoint())
 
         # Get origin graph vertex index
         tied_origin_vertices = director.makeGraph(builder, graph_origin_points)
@@ -691,61 +485,60 @@ class catchmentAnalysis(QObject):
 
         # Combine origin names and tied point vertices
         for index, tied_origin in enumerate(tied_origin_vertices):
-            tied_origins[index] = {"name" : origins[index][name], "vertex" : tied_origin}
+            tied_origins[index] = {'name': origins[index]['name'], 'vertex': tied_origin}
 
         return graph, tied_origins
 
-    def graph_analysis(self, graph, tied_origins, radii):
+    def graph_analysis(self, graph, tied_origins, distances):
 
         # Settings
-        catchment_threshold = max(radii)
+        catchment_threshold = max(distances)
 
         # Variables
         catchment_network = {}
         catchment_points = {}
 
-        # Loop through graph edges, update line dictionary and append
-        for i in graph.arcCount():
-
-            # Get geometry of edge from graph
-            arc_geom = graph.arc(i)
-
-            # Update catchment network
-            catchment_network[i] = {'geom': arc_geom}
+        # Loop through graph and get geometry and write to catchment network
+        for index in range(0, graph.arcCount()):
+            inVertexId = graph.arc(index).inVertex()
+            outVertexId = graph.arc(index).outVertex()
+            inVertexGeom = graph.vertex(inVertexId).point()
+            outVertexGeom = graph.vertex(outVertexId).point()
+            arcGeom = QgsGeometry.fromPolyline([inVertexGeom, outVertexGeom])
+            catchment_network[index] = {'geom': arcGeom, 'cost': {}}
 
         # Loop through tied origins
-        for origin in tied_origins:
+        for i, origin in enumerate(tied_origins):
 
-            origin_name = origin["name"]
-
-            # Find origin vertex id
-            origin_vertex_id = graph.findVertex(tied_origins[i][vertex])
+            origin_name = tied_origins[i]['name']
+            catchment_points[origin_name] = {distance: [] for distance in distances}
+            originVertexId = graph.findVertex(tied_origins[i]['vertex'])
 
             # Run dijkstra and get tree and cost
-            (tree, cost) = QgsGraphAnalyzer.dijkstra(graph, origin_vertex_id, 0)
+            (tree, cost) = QgsGraphAnalyzer.dijkstra(graph, originVertexId, 0)
 
             # Loop through graph arcs
-            for index in graph.ArcCount():
+            for index in range(0, graph.arcCount()):
 
-                # Define the arc end point
-                arc_outer_vertex_id = graph.arc(index).inVertex()
-                arc_outer_vertex_geom = graph.vertex(arc_outer_vertex_id).point()
+                # Define the arc properties
+                inVertexId = graph.arc(index).inVertex()
+                outVertexId = graph.arc(index).outVertex()
+                inVertexGeom = graph.vertex(inVertexId).point()
+                outVertexGeom = graph.vertex(outVertexId).point()
+                arcCost = cost[inVertexId]
 
-                # If arc is the origin set zero cost
-                if arc_outer_vertex_id == origin_vertex_id:
-                    catchment_network[index]['cost'][origin_name].append(0)
+                # If arc is the origin set cost to 0
+                if outVertexId == originVertexId:
+                    catchment_network[index]['cost'][origin_name] = 0
 
-                # If arc is within connected and within the maximum radius set cost accordingly
-                elif cost[arc_outer_vertex_id] < catchment_threshold and cost[arc_outer_vertex_id] != -1:
-                    arc_cost = cost[arc_outer_vertex_id]
+                # If arc is connected and within the maximum radius set cost
+                elif arcCost < catchment_threshold and tree[inVertexId] != -1:
+                    catchment_network[index]['cost'][origin_name] = arcCost
 
-                    # Update cost in catchment network dictionary
-                    catchment_network[index]['cost'][origin_name].append(arc_cost)
-
-                    # Add catchment points for each given radius
-                    for radius in radii:
-                        catchment_points[origin_name]["radius"] = radius
-                        catchment_points[origin_name]["geom"].append(arc_outer_vertex_geom)
+                # Add catchment points for each given radius
+                for distance in distances:
+                    if arcCost < distance:
+                        catchment_points[origin_name][distance].extend([inVertexGeom, outVertexGeom])
 
         return catchment_network, catchment_points
 
@@ -753,76 +546,65 @@ class catchmentAnalysis(QObject):
 
         # Variables
         arc_length_list = []
-        arc_cost_list = []
 
-
-        # Setup all unique origin columns
+        # Setup all unique origin columns and minimum origin distance column
         unique_origin_list = []
         for origin in origins:
-            if not origin in unique_origin_list:
-                output_network.dataProvider().addAttributes([QgsField("%s" % origin, QVariant.Int)])
-                unique_origin_list.append(origin)
-
-        # Setup minimum origin distance column
-        output_network.dataProvider().addAttributes(QgsField["min_dis", QVariant.Int])
+            name = origin['name']
+            if not name in unique_origin_list:
+                output_network.dataProvider().addAttributes([QgsField("%s" % name, QVariant.Int)])
+                unique_origin_list.append(name)
+        output_network.dataProvider().addAttributes([QgsField('min_distance', QVariant.Int)])
+        output_network.updateFields()
 
         # Loop through arcs in catchment network and write geometry and costs
-        for arc in catchment_network:
+        for index in catchment_network:
 
-            # Get arc geometry
-            arc_geom = QgsGeometry.fromPolyline(arc['geom'])
+            # Get arc properties
+            arc_geom = catchment_network[index]['geom']
             arc_length = arc_geom.length()
+            arc_cost_list = catchment_network[index]['cost']
 
             # Ignore arc if already processed
             if arc_length in arc_length_list:
                 pass
 
             # Ignore arc is not connected to origins or outside catchment
-            elif not arc['cost']:
+            elif not arc_cost_list:
                 pass
 
             else:
-
                 # Create feature and write id and geom
                 f = QgsFeature(output_network.pendingFields())
-                f.setAttribute("id", arc)
+                f.setAttribute("id", index)
                 f.setGeometry(arc_geom)
-
+                print arc_cost_list
                 # Read the list of costs and write them to output network
-                for cost_origin in arc['cost'].keys():
-
-                    # Get cost
-                    cost = arc['cost'][cost_origin]
-
-                    # Current cost entry
-                    current_cost = f[cost_origin]
-
+                for name in arc_cost_list:
+                    print name
+                    cost = arc_cost_list[name]
+                    print cost
                     # If no entry set cost
-                    if not current_cost:
-                        f.setAttribute("%s" % cost_origin, cost)
-
+                    if not f[name]:
+                        f.setAttribute(name, cost)
+                        if not f['min_distance']:
+                            f.setAttribute('min_distance', cost)
                     else:
-
                         # Replace current cost when less than cost
-                        if current_cost < cost:
-                            f.setAttribute("%s" % cost_origin, cost)
-
-                    # Add to list of costs
-                    arc_cost_list.append(cost)
-
-                # Calculate and write distance to nearest origin
-                if arc_cost_list > 0:
-                    f.setAttribute('min_dist', int(min(cost_list)))
+                        if f[name] < cost:
+                            f.setAttribute("%s" % name, cost)
+                        if f['min_distance'] > cost:
+                            f.setAttribute('min_distance', cost)
 
                 # Write feature to output network layer
                 output_network.dataProvider().addFeatures([f])
 
-                # Add the length of arc to length list in order to ignore duplicates;d
+                # Add the length of arc to length list in order to ignore duplicates
                 arc_length_list.append(arc_length)
 
         return output_network
 
-    def polygon_writer(self, catchment_points, radii, output_polygon, alpha):
+    def polygon_writer(self, catchment_points, distances, output_polygon, polygon_tolerance):
 
         # Variables
         unique_origin_list = []
@@ -830,64 +612,52 @@ class catchmentAnalysis(QObject):
 
         # Loop through origins and create list of aggregate polygon points
         for name in catchment_points:
-
-            # Check if origin is not duplicated
-            if name not in unique_origin_list:
-
-                # Append origin to unique origin list
+            if name not in unique_origin_list:  # Check if origin is not duplicated
+                polygon_points[name] = catchment_points[name]  # Copy origin points for all radii
                 unique_origin_list.append(name)
 
-                # Copy origin points for all radii
-                polygon_points[name] = catchment_points[name]
-
-            # Otherwise append point to existing entry
-            else:
-
                 # Loop through radii and append points
-                for radius in radii:
-                    points = catchment_points[origin][radius]
-                    polygon_points[name][radius].append(points)
-
-        # Create index for the id column
-        index = 1
+                for distance in distances:
+                    points = catchment_points[name][distance]
+                    polygon_points[name][distance].append(points)
 
         # Loop through polygon points and create their concave hull
-        for name,points in polygon_points:
+        index = 1
+        for name in polygon_points:
 
             # Loop through radii
-            for radius in points[radius]:
-
+            for distance in polygon_points[name]:
+                points = polygon_points[name][distance]
                 # Create polygon feature
-                p = QgsFeature()
-                p.setAttribute("id", index)
-                p.setAttribute("origin", name)
-                p.setAttribute("distance", radius)
-                polygon_geom = QgsGeometry.fromWkt((concave_hull(points, alpha)).wkt())
+                p = QgsFeature(output_polygon.pendingFields())
+                p.setAttribute('id', index)
+                p.setAttribute('origin', name)
+                p.setAttribute('distance', distance)
+                hull = self.concave_hull.concave_hull(points, polygon_tolerance)
+                polygon_geom = QgsGeometry.fromPolygon([hull, ])
                 p.setGeometry(polygon_geom)
                 output_polygon.dataProvider().addFeatures([p])
-
-                # Next feature index
                 index += 1
 
         return output_polygon
 
-    def network_renderer(self, output_network, radii):
+    def network_renderer(self, output_network, distances):
 
         # Settings
-        ca_threshold = max(int(radii))
+        catchment_threshold = max(distances)
 
         # settings for 10 color ranges depending on the radius
         color_ranges = (
-            (0, (0.1 * ca_threshold), '#ff0000'),
-            ((0.1 * ca_threshold), (0.2 * ca_threshold), '#ff5100'),
-            ((0.2 * ca_threshold), (0.3 * ca_threshold), '#ff9900'),
-            ((0.3 * ca_threshold), (0.4 * ca_threshold), '#ffc800'),
-            ((0.4 * ca_threshold), (0.5 * ca_threshold), '#ffee00'),
-            ((0.5 * ca_threshold), (0.6 * ca_threshold), '#a2ff00'),
-            ((0.6 * ca_threshold), (0.7 * ca_threshold), '#00ff91'),
-            ((0.7 * ca_threshold), (0.8 * ca_threshold), '#00f3ff'),
-            ((0.8 * ca_threshold), (0.9 * ca_threshold), '#0099ff'),
-            ((0.9 * ca_threshold), (1 * ca_threshold), '#0033ff'))
+            (0, (0.1 * catchment_threshold), '#ff0000'),
+            ((0.1 * catchment_threshold), (0.2 * catchment_threshold), '#ff5100'),
+            ((0.2 * catchment_threshold), (0.3 * catchment_threshold), '#ff9900'),
+            ((0.3 * catchment_threshold), (0.4 * catchment_threshold), '#ffc800'),
+            ((0.4 * catchment_threshold), (0.5 * catchment_threshold), '#ffee00'),
+            ((0.5 * catchment_threshold), (0.6 * catchment_threshold), '#a2ff00'),
+            ((0.6 * catchment_threshold), (0.7 * catchment_threshold), '#00ff91'),
+            ((0.7 * catchment_threshold), (0.8 * catchment_threshold), '#00f3ff'),
+            ((0.8 * catchment_threshold), (0.9 * catchment_threshold), '#0099ff'),
+            ((0.9 * catchment_threshold), (1 * catchment_threshold), '#0033ff'))
 
         # list with all color ranges
         ranges = []
@@ -912,7 +682,7 @@ class catchmentAnalysis(QObject):
         # create a black dotted outline symbol layer
         symbol_layer = QgsMarkerLineSymbolLayerV2()
         symbol_layer.setColor(QColor('black'))
-        symbol_layer.setWidth(1)
+        symbol_layer.setWidth(0.5)
 
         # create renderer and change the symbol layer in its symbol
         renderer = output_polygon.rendererV2()
