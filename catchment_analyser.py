@@ -43,7 +43,7 @@ import utility_functions as uf
 
 # Import the debug library
 # set is_debug to False in release version
-is_debug = False
+is_debug = True
 try:
     import pydevd
     has_pydevd = True
@@ -101,8 +101,8 @@ class CatchmentAnalyser:
         self.dlg.costCheck.stateChanged.connect(self.updateCost)
         self.dlg.nameCheck.stateChanged.connect(self.updateName)
         self.dlg.analysisButton.clicked.connect(self.runAnalysis)
-        self.legend.itemAdded.connect(self.updateLayers)
-        self.legend.itemRemoved.connect(self.updateLayers)
+        # self.legend.itemAdded.connect(self.updateLayers)
+        # self.legend.itemRemoved.connect(self.updateLayers)
 
     # noinspection PyMethodMayBeStatic
     def tr(self, message):

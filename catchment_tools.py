@@ -578,12 +578,12 @@ class catchmentAnalysis(QObject):
                 f = QgsFeature(output_network.pendingFields())
                 f.setAttribute("id", index)
                 f.setGeometry(arc_geom)
-                print arc_cost_list
+
                 # Read the list of costs and write them to output network
                 for name in arc_cost_list:
-                    print name
+
                     cost = arc_cost_list[name]
-                    print cost
+
                     # If no entry set cost
                     if not f[name]:
                         f.setAttribute(name, cost)
@@ -628,23 +628,24 @@ class catchmentAnalysis(QObject):
             # Loop through radii
             for distance in polygon_points[name]:
                 points = polygon_points[name][distance]
-                # Create polygon feature
-                p = QgsFeature(output_polygon.pendingFields())
-                p.setAttribute('id', index)
-                p.setAttribute('origin', name)
-                p.setAttribute('distance', distance)
-                hull = self.concave_hull.concave_hull(points, polygon_tolerance)
-                polygon_geom = QgsGeometry.fromPolygon([hull, ])
-                p.setGeometry(polygon_geom)
-                output_polygon.dataProvider().addFeatures([p])
-                index += 1
+                if len(points) > 2:
+                    # Create polygon feature
+                    p = QgsFeature(output_polygon.pendingFields())
+                    p.setAttribute('id', index)
+                    p.setAttribute('origin', name)
+                    p.setAttribute('distance', distance)
+                    hull = self.concave_hull.concave_hull(points, polygon_tolerance)
+                    polygon_geom = QgsGeometry.fromPolygon([hull, ])
+                    p.setGeometry(polygon_geom)
+                    output_polygon.dataProvider().addFeatures([p])
+                    index += 1
 
-        return output_polygon
+                    return output_polygon
 
     def network_renderer(self, output_network, distances):
 
         # Settings
-        catchment_threshold = max(distances)
+        catchment_threshold = int(max(distances))
 
         # settings for 10 color ranges depending on the radius
         color_ranges = (
@@ -671,7 +672,7 @@ class catchmentAnalysis(QObject):
             ranges.append(range)
 
         # create renderer based on ranges and apply to network
-        renderer = QgsGraduatedSymbolRendererV2('min_dist', ranges)
+        renderer = QgsGraduatedSymbolRendererV2('min_distance', ranges)
         output_network.setRendererV2(renderer)
 
         # add network to the canvas
