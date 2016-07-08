@@ -46,7 +46,7 @@ import utility_functions as uf
 is_debug = True
 try:
     import pydevd
-    has_pydevd = True
+    has_pydevd = False
 except ImportError, e:
     has_pydevd = False
     is_debug = False

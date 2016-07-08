@@ -563,14 +563,15 @@ class catchmentAnalysis(QObject):
             # Get arc properties
             arc_geom = catchment_network[index]['geom']
             arc_length = arc_geom.length()
-            arc_cost_list = catchment_network[index]['cost']
+            arc_cost_dict = catchment_network[index]['cost']
+            arc_cost_list = []
 
             # Ignore arc if already processed
             if arc_length in arc_length_list:
                 pass
 
             # Ignore arc is not connected to origins or outside catchment
-            elif not arc_cost_list:
+            elif not arc_cost_dict:
                 pass
 
             else:
@@ -580,9 +581,10 @@ class catchmentAnalysis(QObject):
                 f.setGeometry(arc_geom)
 
                 # Read the list of costs and write them to output network
-                for name in arc_cost_list:
+                for name in arc_cost_dict:
 
-                    cost = arc_cost_list[name]
+                    cost = arc_cost_dict[name]
+                    arc_cost_list.append(cost)
 
                     # If no entry set cost
                     if not f[name]:
@@ -593,8 +595,10 @@ class catchmentAnalysis(QObject):
                         # Replace current cost when less than cost
                         if f[name] < cost:
                             f.setAttribute("%s" % name, cost)
-                        if f['min_distance'] > cost:
-                            f.setAttribute('min_distance', cost)
+
+                # Set minimum cost
+                if arc_cost_list > 0:
+                    f.setAttribute('min_distance', min(arc_cost_list))
 
                 # Write feature to output network layer
                 output_network.dataProvider().addFeatures([f])
@@ -612,19 +616,19 @@ class catchmentAnalysis(QObject):
 
         # Loop through origins and create list of aggregate polygon points
         for name in catchment_points:
-            if name not in unique_origin_list:  # Check if origin is not duplicated
+            if not name in unique_origin_list:  # Check if origin is not duplicated
                 polygon_points[name] = catchment_points[name]  # Copy origin points for all radii
                 unique_origin_list.append(name)
 
-                # Loop through radii and append points
+                # Loop through distances and append points
                 for distance in distances:
                     points = catchment_points[name][distance]
-                    polygon_points[name][distance].append(points)
+                    polygon_points[name][distance].extend(points)
 
         # Loop through polygon points and create their concave hull
         index = 1
         for name in polygon_points:
-
+            print name
             # Loop through radii
             for distance in polygon_points[name]:
                 points = polygon_points[name][distance]
@@ -640,7 +644,7 @@ class catchmentAnalysis(QObject):
                     output_polygon.dataProvider().addFeatures([p])
                     index += 1
 
-                    return output_polygon
+        return output_polygon
 
     def network_renderer(self, output_network, distances):
 
