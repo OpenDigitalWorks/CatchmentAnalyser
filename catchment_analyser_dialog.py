@@ -47,9 +47,9 @@ class CatchmentAnalyserDialog(QtGui.QDialog, FORM_CLASS):
         self.polygonText.setPlaceholderText("Save as temporary layer...")
         self.polygonSaveButton.clicked.connect(self.setPolygonOutput)
 
-        # setup the progress bar
+        # Setup the progress bar
         self.analysisProgress.setMinimum(0)
-        self.analysisProgress.setMaximum(5)
+        self.analysisProgress.setMaximum(6)
 
     def setNetworkLayers(self, names):
         layers = ['-----']

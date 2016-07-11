@@ -438,11 +438,11 @@ class catchmentAnalysis(QObject):
 
             # Depending on type of origin create and append points
             if origin_type == 'point':
-                origins.append({origin_name: f.geometry()})
+                origins.append({'name': origin_name, 'geom': f.geometry()})
 
             elif origin_type == 'line' or origin_type == 'polygon':
                 origins.append({'name': origin_name, 'geom': f.geometry().centroid()})
-
+        print origins
         return origins
 
     def graph_builder(self, network, cost_field, origins, tolerance, crs, epsg):
@@ -528,7 +528,7 @@ class catchmentAnalysis(QObject):
                 arcCost = cost[inVertexId]
 
                 # If arc is the origin set cost to 0
-                if outVertexId == originVertexId:
+                if outVertexId == originVertexId or inVertexId == originVertexId:
                     catchment_network[index]['cost'][origin_name] = 0
 
                 # If arc is connected and within the maximum radius set cost
@@ -554,7 +554,7 @@ class catchmentAnalysis(QObject):
             if not name in unique_origin_list:
                 output_network.dataProvider().addAttributes([QgsField("%s" % name, QVariant.Int)])
                 unique_origin_list.append(name)
-        output_network.dataProvider().addAttributes([QgsField('min_distance', QVariant.Int)])
+        output_network.dataProvider().addAttributes([QgsField('min_dist', QVariant.Int)])
         output_network.updateFields()
 
         # Loop through arcs in catchment network and write geometry and costs
@@ -589,8 +589,8 @@ class catchmentAnalysis(QObject):
                     # If no entry set cost
                     if not f[name]:
                         f.setAttribute(name, cost)
-                        if not f['min_distance']:
-                            f.setAttribute('min_distance', cost)
+                        if not f['min_dist']:
+                            f.setAttribute('min_dist', cost)
                     else:
                         # Replace current cost when less than cost
                         if f[name] < cost:
@@ -598,7 +598,7 @@ class catchmentAnalysis(QObject):
 
                 # Set minimum cost
                 if arc_cost_list > 0:
-                    f.setAttribute('min_distance', min(arc_cost_list))
+                    f.setAttribute('min_dist', min(arc_cost_list))
 
                 # Write feature to output network layer
                 output_network.dataProvider().addFeatures([f])
@@ -628,7 +628,7 @@ class catchmentAnalysis(QObject):
         # Loop through polygon points and create their concave hull
         index = 1
         for name in polygon_points:
-            print name
+
             # Loop through radii
             for distance in polygon_points[name]:
                 points = polygon_points[name][distance]
@@ -650,7 +650,9 @@ class catchmentAnalysis(QObject):
 
         # Settings
         catchment_threshold = int(max(distances))
+        print output_network
 
+        print output_network.providerType()
         # settings for 10 color ranges depending on the radius
         color_ranges = (
             (0, (0.1 * catchment_threshold), '#ff0000'),
@@ -676,7 +678,7 @@ class catchmentAnalysis(QObject):
             ranges.append(range)
 
         # create renderer based on ranges and apply to network
-        renderer = QgsGraduatedSymbolRendererV2('min_distance', ranges)
+        renderer = QgsGraduatedSymbolRendererV2('min_dist', ranges)
         output_network.setRendererV2(renderer)
 
         # add network to the canvas

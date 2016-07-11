@@ -272,7 +272,7 @@ class CatchmentAnalyser:
     def tempPolygon(self, epsg):
         if self.dlg.polygonCheck.isChecked():
             output_polygon = uf.createTempLayer(
-                'catchment_polygon',
+                'catchment_areas',
                 'POLYGON',
                 epsg,
                 ['id', 'origin', 'distance'],
@@ -297,35 +297,50 @@ class CatchmentAnalyser:
         settings['epsg'] = self.getNetwork().crs().authid()
         settings['temp network'] = self.tempNetwork(str(settings['epsg']).replace("EPSG:", ''))
         settings['temp polygon'] = self.tempPolygon(str(settings['epsg']).replace("EPSG:", ''))
+        settings['output network'] = self.dlg.getNetworkOutput()
+        settings['output polygon'] = self.dlg.getPolygonOutput()
 
         return settings
 
     def runAnalysis(self):
-
+        self.dlg.analysisProgress.reset()
+        # Getting al the settings
         settings = self.getAnalysisSettings()
-
+        self.dlg.analysisProgress.setValue(1)
         # Prepare the origins
-        origins = self.catchmentAnalysis.origin_preparation(
-            settings['origins'],
-            settings['name']
-        )
+        if settings['origins']:
+            origins = self.catchmentAnalysis.origin_preparation(
+                settings['origins'],
+                settings['name']
+            )
+        else:
+            uf.giveWarningMessage("Catchment Analyser: No origins selected!")
+        self.dlg.analysisProgress.setValue(2)
 
         # Build the graph
-        graph, tied_origins = self.catchmentAnalysis.graph_builder(
-            settings['network'],
-            settings['cost'],
-            origins,
-            settings['network tolerance'],
-            settings['crs'],
-            settings['epsg']
-        )
+        if settings['network']:
+            graph, tied_origins = self.catchmentAnalysis.graph_builder(
+                settings['network'],
+                settings['cost'],
+                origins,
+                settings['network tolerance'],
+                settings['crs'],
+                settings['epsg']
+            )
+        else:
+            uf.giveWarningMessage("Catchment Analyser: No network selected!")
+        self.dlg.analysisProgress.setValue(3)
 
         # Run the analysis
-        catchment_network, catchment_points = self.catchmentAnalysis.graph_analysis(
-            graph,
-            tied_origins,
-            settings['distances']
-        )
+        if settings['distances']:
+            catchment_network, catchment_points = self.catchmentAnalysis.graph_analysis(
+                graph,
+                tied_origins,
+                settings['distances']
+            )
+        else:
+            uf.giveWarningMessage("Catchment Analyser: No distances defined!")
+        self.dlg.analysisProgress.setValue(4)
 
         # Write and render the catchment network
         if self.dlg.networkCheck.isChecked():
@@ -334,7 +349,14 @@ class CatchmentAnalyser:
                 catchment_network,
                 settings['temp network']
             )
-            self.catchmentAnalysis.network_renderer(output_network, settings['distances'])
+            if settings['output network']:
+                uf.createShapeFile(output_network, settings['output network'], settings['crs'])
+                output_network = QgsVectorLayer(settings['output network'], 'catchment_network', 'ogr')
+                self.catchmentAnalysis.network_renderer(output_network, settings['distances'])
+            else:
+                self.catchmentAnalysis.network_renderer(output_network, settings['distances'])
+        self.dlg.analysisProgress.setValue(5)
+
 
         # Write and render the catchment polygons
         if self.dlg.polygonCheck.isChecked():
@@ -344,7 +366,13 @@ class CatchmentAnalyser:
                 settings['temp polygon'],
                 settings['polygon tolerance']
             )
-            self.catchmentAnalysis.polygon_renderer(output_polygon)
+            if settings['output polygon']:
+                uf.createShapeFile(output_polygon, settings['output polygon'], settings['crs'])
+                output_polygon = QgsVectorLayer(settings['output polygon'], 'catchment_areas', 'ogr')
+                self.catchmentAnalysis.polygon_renderer(output_polygon)
+            else:
+                self.catchmentAnalysis.polygon_renderer(output_polygon)
+        self.dlg.analysisProgress.setValue(6)
 
     def run(self):
         """Run method that performs all the real work"""
