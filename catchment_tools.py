@@ -424,9 +424,6 @@ class catchmentAnalysis(QObject):
         # Create a dictionary of origin point dictionaries containing name and geometry
         origins = []
 
-        # Check geometry type of origin layer
-        origin_type = uf.getGeomType(origin_vector)
-
         # Loop through origin and get or create points
         for i, f in enumerate(origin_vector.getFeatures()):
 
@@ -436,13 +433,8 @@ class catchmentAnalysis(QObject):
             else:
                 origin_name = "origin_" + "%s" % (i+1)
 
-            # Depending on type of origin create and append points
-            if origin_type == 'point':
-                origins.append({'name': origin_name, 'geom': f.geometry()})
+            origins.append({'name': origin_name, 'geom': f.geometry().centroid()})
 
-            elif origin_type == 'line' or origin_type == 'polygon':
-                origins.append({'name': origin_name, 'geom': f.geometry().centroid()})
-        print origins
         return origins
 
     def graph_builder(self, network, cost_field, origins, tolerance, crs, epsg):
@@ -525,7 +517,7 @@ class catchmentAnalysis(QObject):
                 outVertexId = graph.arc(index).outVertex()
                 inVertexGeom = graph.vertex(inVertexId).point()
                 outVertexGeom = graph.vertex(outVertexId).point()
-                arcCost = cost[inVertexId]
+                arcCost = max(cost[outVertexId], cost[inVertexId])
 
                 # If arc is the origin set cost to 0
                 if outVertexId == originVertexId or inVertexId == originVertexId:
@@ -533,12 +525,12 @@ class catchmentAnalysis(QObject):
 
                 # If arc is connected and within the maximum radius set cost
                 elif arcCost < catchment_threshold and tree[inVertexId] != -1:
-                    catchment_network[index]['cost'][origin_name] = arcCost
+                    catchment_network[index]['cost'][origin_name] = int(arcCost)
 
                 # Add catchment points for each given radius
                 for distance in distances:
                     if arcCost < distance:
-                        catchment_points[origin_name][distance].extend([inVertexGeom, outVertexGeom])
+                        catchment_points[origin_name][distance].extend([inVertexGeom, ])
 
         return catchment_network, catchment_points
 
@@ -650,9 +642,7 @@ class catchmentAnalysis(QObject):
 
         # Settings
         catchment_threshold = int(max(distances))
-        print output_network
 
-        print output_network.providerType()
         # settings for 10 color ranges depending on the radius
         color_ranges = (
             (0, (0.1 * catchment_threshold), '#ff0000'),
@@ -687,14 +677,11 @@ class catchmentAnalysis(QObject):
     def polygon_renderer(self, output_polygon):
 
         # create a black dotted outline symbol layer
-        symbol_layer = QgsMarkerLineSymbolLayerV2()
-        symbol_layer.setColor(QColor('black'))
-        symbol_layer.setWidth(0.5)
+        symbol = QgsFillSymbolV2().createSimple({'color': 'grey', 'outline_width': '0'})
+        symbol.setAlpha(0.2)
 
         # create renderer and change the symbol layer in its symbol
-        renderer = output_polygon.rendererV2()
-        renderer.symbols()[0].changeSymbolLayer(0, symbol_layer)
-        output_polygon.setRendererV2(renderer)
+        output_polygon.rendererV2().setSymbol(symbol)
 
         # add catchment to the canvas
         QgsMapLayerRegistry.instance().addMapLayer(output_polygon)

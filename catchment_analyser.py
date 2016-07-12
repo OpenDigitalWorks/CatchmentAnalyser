@@ -32,7 +32,6 @@ import os.path
 
 # Import QGIS classes
 from qgis.core import *
-from qgis.networkanalysis import *
 from qgis.utils import *
 
 # Import tool classes
@@ -43,7 +42,7 @@ import utility_functions as uf
 
 # Import the debug library
 # set is_debug to False in release version
-is_debug = True
+is_debug = False
 try:
     import pydevd
     has_pydevd = False
@@ -101,8 +100,8 @@ class CatchmentAnalyser:
         self.dlg.costCheck.stateChanged.connect(self.updateCost)
         self.dlg.nameCheck.stateChanged.connect(self.updateName)
         self.dlg.analysisButton.clicked.connect(self.runAnalysis)
-        # self.legend.itemAdded.connect(self.updateLayers)
-        # self.legend.itemRemoved.connect(self.updateLayers)
+
+
 
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
@@ -220,13 +219,13 @@ class CatchmentAnalyser:
 
 
     def updateNetwork(self):
-        network_layers = uf.getLegendLayersNames(iface, geom=[1,], provider='all')
+        network_layers = uf.getLegendLayersNames(iface, geom=[1, ], provider='all')
         self.dlg.setNetworkLayers(network_layers)
         self.updateCost()
 
 
     def updateOrigins(self):
-        origins_layers = uf.getLegendLayersNames(iface, geom='all', provider='all')
+        origins_layers = uf.getLegendLayersNames(iface, geom=[0, ], provider='all')
         self.dlg.setOriginLayers(origins_layers)
         self.updateName()
 
@@ -280,6 +279,7 @@ class CatchmentAnalyser:
             )
             return output_polygon
 
+
     def getAnalysisSettings(self):
 
         # Creating a combined settings dictionary
@@ -301,6 +301,7 @@ class CatchmentAnalyser:
         settings['output polygon'] = self.dlg.getPolygonOutput()
 
         return settings
+
 
     def runAnalysis(self):
         self.dlg.analysisProgress.reset()
@@ -342,22 +343,6 @@ class CatchmentAnalyser:
             uf.giveWarningMessage("Catchment Analyser: No distances defined!")
         self.dlg.analysisProgress.setValue(4)
 
-        # Write and render the catchment network
-        if self.dlg.networkCheck.isChecked():
-            output_network = self.catchmentAnalysis.network_writer(
-                origins,
-                catchment_network,
-                settings['temp network']
-            )
-            if settings['output network']:
-                uf.createShapeFile(output_network, settings['output network'], settings['crs'])
-                output_network = QgsVectorLayer(settings['output network'], 'catchment_network', 'ogr')
-                self.catchmentAnalysis.network_renderer(output_network, settings['distances'])
-            else:
-                self.catchmentAnalysis.network_renderer(output_network, settings['distances'])
-        self.dlg.analysisProgress.setValue(5)
-
-
         # Write and render the catchment polygons
         if self.dlg.polygonCheck.isChecked():
             output_polygon = self.catchmentAnalysis.polygon_writer(
@@ -372,12 +357,32 @@ class CatchmentAnalyser:
                 self.catchmentAnalysis.polygon_renderer(output_polygon)
             else:
                 self.catchmentAnalysis.polygon_renderer(output_polygon)
+        self.dlg.analysisProgress.setValue(5)
+
+        # Write and render the catchment network
+        if self.dlg.networkCheck.isChecked():
+            output_network = self.catchmentAnalysis.network_writer(
+                origins,
+                catchment_network,
+                settings['temp network']
+            )
+            if settings['output network']:
+                uf.createShapeFile(output_network, settings['output network'], settings['crs'])
+                output_network = QgsVectorLayer(settings['output network'], 'catchment_network', 'ogr')
+                self.catchmentAnalysis.network_renderer(output_network, settings['distances'])
+            else:
+                self.catchmentAnalysis.network_renderer(output_network, settings['distances'])
         self.dlg.analysisProgress.setValue(6)
 
+        # Closing the dialog
+        self.dlg.closeDialog()
+
+
     def run(self):
-        """Run method that performs all the real work"""
         # Show the dialog
         self.dlg.show()
+
         # Update layers
         self.updateLayers()
+
 

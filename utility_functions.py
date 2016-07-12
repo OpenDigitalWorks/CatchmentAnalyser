@@ -22,7 +22,6 @@
 """
 
 from PyQt4.QtCore import *
-from PyQt4.QtGui import *
 from qgis.core import *
 from qgis.utils import *
 
@@ -87,33 +86,6 @@ def giveWarningMessage(message):
         "%s" % (message),
         level=QgsMessageBar.WARNING,
         duration=5)
-
-
-def getGeomType(vector_layer):
-    # Check layer validity
-    if not vector_layer.isValid():
-        self.giveWarningMessage("Invalid vector layer!")
-
-    else:
-
-        # Check origin layer geometry
-        if vector_layer.wkbType() == 7:
-            self.giveWarningMessage("Layer contains geometry collection!")
-
-        # Check if layer contains points
-        elif not vector_layer.wkbType() == 1 or vector_layer.wkbType() == 4:
-            geom_type = 'point'
-
-        # Check if layer contains lines
-        elif not vector_layer.wkbType() == 2 or vector_layer.wkbType() == 5:
-            geom_type = 'line'
-
-        # Check if layer contains polygons
-        elif not vector_layer.wkbType() == 3 or vector_layer.wkbType() == 6:
-            geom_type = 'polygon'
-
-    return geom_type
-
 
 def createTempLayer(name, geometry, srid, attributes, types):
     # Geometry can be 'POINT', 'LINESTRING' or 'POLYGON' or the 'MULTI' version of the previous

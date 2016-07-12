@@ -144,6 +144,23 @@ class CatchmentAnalyserDialog(QtGui.QDialog, FORM_CLASS):
         return self.polygonText.text()
 
 
+    def closeDialog(self):
+
+        self.costCombo.clear()
+        self.costCombo.setEnabled(False)
+        self.costCheck.setCheckState(False)
+        self.nameCombo.clear()
+        self.nameCombo.setEnabled(False)
+        self.nameCheck.setCheckState(False)
+        self.distancesText.clear()
+        self.networkTolSpin.setValue(1)
+        self.polygonTolSpin.setValue(10)
+        self.networkText.clear()
+        self.polygonText.clear()
+        self.analysisProgress.reset()
+        self.close()
+
+
 
 
 
