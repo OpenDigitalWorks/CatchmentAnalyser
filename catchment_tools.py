@@ -2,13 +2,10 @@ from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
 from qgis.core import *
-from qgis.gui import *
 from qgis.networkanalysis import *
 from qgis.utils import *
 
 import math
-
-import utility_functions as uf
 
 class customCost(QgsArcProperter):
     def __init__(self, costColumIndex, defaultValue):
@@ -516,7 +513,7 @@ class catchmentAnalysis(QObject):
                 inVertexId = graph.arc(index).inVertex()
                 outVertexId = graph.arc(index).outVertex()
                 inVertexGeom = graph.vertex(inVertexId).point()
-                outVertexGeom = graph.vertex(outVertexId).point()
+                # outVertexGeom = graph.vertex(outVertexId).point()
                 arcCost = max(cost[outVertexId], cost[inVertexId])
 
                 # If arc is the origin set cost to 0

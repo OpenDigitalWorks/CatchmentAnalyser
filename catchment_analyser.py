@@ -63,7 +63,6 @@ class CatchmentAnalyser:
         """
         # Save reference to the QGIS interface
         self.iface = iface
-        self.legend = self.iface.legendInterface()
         # Initialize plugin directory
         self.plugin_dir = os.path.dirname(__file__)
         # Initialize analysis
@@ -90,6 +89,7 @@ class CatchmentAnalyser:
         # TODO: We are going to let the user set this up in a future iteration
         self.toolbar = self.iface.addToolBar(u'CatchmentAnalyser')
         self.toolbar.setObjectName(u'CatchmentAnalyser')
+
         # Setup debugger
         if has_pydevd and is_debug:
             pydevd.settrace('localhost', port=53100, stdoutToServer=True, stderrToServer=True, suspend=True)
