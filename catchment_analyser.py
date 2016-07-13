@@ -294,9 +294,9 @@ class CatchmentAnalyser:
         settings['network tolerance'] = self.dlg.getNetworkTolerance()
         settings['polygon tolerance'] = int(self.dlg.getPolygonTolerance())
         settings['crs'] = self.getNetwork().crs()
-        settings['epsg'] = self.getNetwork().crs().authid()
-        settings['temp network'] = self.tempNetwork(str(settings['epsg']).replace("EPSG:", ''))
-        settings['temp polygon'] = self.tempPolygon(str(settings['epsg']).replace("EPSG:", ''))
+        settings['epsg'] = self.getNetwork().crs().authid()[5:] # removing EPSG:
+        settings['temp network'] = self.tempNetwork(settings['epsg'])
+        settings['temp polygon'] = self.tempPolygon(settings['epsg'])
         settings['output network'] = self.dlg.getNetworkOutput()
         settings['output polygon'] = self.dlg.getPolygonOutput()
 
