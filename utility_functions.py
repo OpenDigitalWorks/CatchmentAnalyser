@@ -79,14 +79,6 @@ def getFieldNames(layer):
     return field_names
 
 
-def giveWarningMessage(message):
-    # Gives warning according to message
-    self.iface.messageBar().pushMessage(
-        "Catchment Analyser: ",
-        "%s" % (message),
-        level=QgsMessageBar.WARNING,
-        duration=5)
-
 def createTempLayer(name, geometry, srid, attributes, types):
     # Geometry can be 'POINT', 'LINESTRING' or 'POLYGON' or the 'MULTI' version of the previous
     vlayer = QgsVectorLayer('%s?crs=EPSG:%s' % (geometry, srid), name, "memory")

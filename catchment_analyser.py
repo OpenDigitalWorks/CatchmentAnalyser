@@ -279,47 +279,59 @@ class CatchmentAnalyser:
             )
             return output_polygon
 
+    def giveWarningMessage(self, message):
+        # Gives warning according to message
+        self.iface.messageBar().pushMessage(
+            "Catchment Analyser: ",
+            "%s" % (message),
+            level=QgsMessageBar.WARNING,
+            duration=5)
 
     def getAnalysisSettings(self):
 
         # Creating a combined settings dictionary
         settings = {}
 
-        # Get settings from the dialog
-        settings['network'] = self.getNetwork()
-        settings['cost'] = self.dlg.getCostField()
-        settings['origins'] = self.getOrigins()
-        settings['name'] = self.dlg.getName()
-        settings['distances'] = self.dlg.getDistances()
-        settings['network tolerance'] = self.dlg.getNetworkTolerance()
-        settings['polygon tolerance'] = int(self.dlg.getPolygonTolerance())
-        settings['crs'] = self.getNetwork().crs()
-        settings['epsg'] = self.getNetwork().crs().authid()[5:] # removing EPSG:
-        settings['temp network'] = self.tempNetwork(settings['epsg'])
-        settings['temp polygon'] = self.tempPolygon(settings['epsg'])
-        settings['output network'] = self.dlg.getNetworkOutput()
-        settings['output polygon'] = self.dlg.getPolygonOutput()
+        # Raise warnings
+        if not self.getNetwork():
+            self.giveWarningMessage("Catchment Analyser: No network selected!")
+        elif not self.getOrigins():
+            self.giveWarningMessage("Catchment Analyser: No origins selected!")
+        elif not self.dlg.getDistances():
+            self.giveWarningMessage("Catchment Analyser: No distances defined!")
+        else:
+            # Get settings from the dialog
+            settings['network'] = self.getNetwork()
+            settings['cost'] = self.dlg.getCostField()
+            settings['origins'] = self.getOrigins()
+            settings['name'] = self.dlg.getName()
+            settings['distances'] = self.dlg.getDistances()
+            settings['network tolerance'] = self.dlg.getNetworkTolerance()
+            settings['polygon tolerance'] = int(self.dlg.getPolygonTolerance())
+            settings['crs'] = self.getNetwork().crs()
+            settings['epsg'] = self.getNetwork().crs().authid()[5:] # removing EPSG:
+            settings['temp network'] = self.tempNetwork(settings['epsg'])
+            settings['temp polygon'] = self.tempPolygon(settings['epsg'])
+            settings['output network'] = self.dlg.getNetworkOutput()
+            settings['output polygon'] = self.dlg.getPolygonOutput()
 
-        return settings
+            return settings
 
 
     def runAnalysis(self):
         self.dlg.analysisProgress.reset()
-        # Getting al the settings
-        settings = self.getAnalysisSettings()
-        self.dlg.analysisProgress.setValue(1)
-        # Prepare the origins
-        if settings['origins']:
+        if self.getAnalysisSettings():
+            # Getting al the settings
+            settings = self.getAnalysisSettings()
+            self.dlg.analysisProgress.setValue(1)
+            # Prepare the origins
             origins = self.catchmentAnalysis.origin_preparation(
                 settings['origins'],
                 settings['name']
             )
-        else:
-            uf.giveWarningMessage("Catchment Analyser: No origins selected!")
-        self.dlg.analysisProgress.setValue(2)
+            self.dlg.analysisProgress.setValue(2)
 
-        # Build the graph
-        if settings['network']:
+            # Build the graph
             graph, tied_origins = self.catchmentAnalysis.graph_builder(
                 settings['network'],
                 settings['cost'],
@@ -328,51 +340,46 @@ class CatchmentAnalyser:
                 settings['crs'],
                 settings['epsg']
             )
-        else:
-            uf.giveWarningMessage("Catchment Analyser: No network selected!")
-        self.dlg.analysisProgress.setValue(3)
+            self.dlg.analysisProgress.setValue(3)
 
-        # Run the analysis
-        if settings['distances']:
+            # Run the analysis
             catchment_network, catchment_points = self.catchmentAnalysis.graph_analysis(
                 graph,
                 tied_origins,
                 settings['distances']
             )
-        else:
-            uf.giveWarningMessage("Catchment Analyser: No distances defined!")
-        self.dlg.analysisProgress.setValue(4)
+            self.dlg.analysisProgress.setValue(4)
 
-        # Write and render the catchment polygons
-        if self.dlg.polygonCheck.isChecked():
-            output_polygon = self.catchmentAnalysis.polygon_writer(
-                catchment_points,
-                settings['distances'],
-                settings['temp polygon'],
-                settings['polygon tolerance']
-            )
-            if settings['output polygon']:
-                uf.createShapeFile(output_polygon, settings['output polygon'], settings['crs'])
-                output_polygon = QgsVectorLayer(settings['output polygon'], 'catchment_areas', 'ogr')
-                self.catchmentAnalysis.polygon_renderer(output_polygon)
-            else:
-                self.catchmentAnalysis.polygon_renderer(output_polygon)
-        self.dlg.analysisProgress.setValue(5)
+            # Write and render the catchment polygons
+            if self.dlg.polygonCheck.isChecked():
+                output_polygon = self.catchmentAnalysis.polygon_writer(
+                    catchment_points,
+                    settings['distances'],
+                    settings['temp polygon'],
+                    settings['polygon tolerance']
+                )
+                if settings['output polygon']:
+                    uf.createShapeFile(output_polygon, settings['output polygon'], settings['crs'])
+                    output_polygon = QgsVectorLayer(settings['output polygon'], 'catchment_areas', 'ogr')
+                    self.catchmentAnalysis.polygon_renderer(output_polygon)
+                else:
+                    self.catchmentAnalysis.polygon_renderer(output_polygon)
+            self.dlg.analysisProgress.setValue(5)
 
-        # Write and render the catchment network
-        if self.dlg.networkCheck.isChecked():
-            output_network = self.catchmentAnalysis.network_writer(
-                origins,
-                catchment_network,
-                settings['temp network']
-            )
-            if settings['output network']:
-                uf.createShapeFile(output_network, settings['output network'], settings['crs'])
-                output_network = QgsVectorLayer(settings['output network'], 'catchment_network', 'ogr')
-                self.catchmentAnalysis.network_renderer(output_network, settings['distances'])
-            else:
-                self.catchmentAnalysis.network_renderer(output_network, settings['distances'])
-        self.dlg.analysisProgress.setValue(6)
+            # Write and render the catchment network
+            if self.dlg.networkCheck.isChecked():
+                output_network = self.catchmentAnalysis.network_writer(
+                    origins,
+                    catchment_network,
+                    settings['temp network']
+                )
+                if settings['output network']:
+                    uf.createShapeFile(output_network, settings['output network'], settings['crs'])
+                    output_network = QgsVectorLayer(settings['output network'], 'catchment_network', 'ogr')
+                    self.catchmentAnalysis.network_renderer(output_network, settings['distances'])
+                else:
+                    self.catchmentAnalysis.network_renderer(output_network, settings['distances'])
+            self.dlg.analysisProgress.setValue(6)
 
         # Closing the dialog
         self.dlg.closeDialog()
