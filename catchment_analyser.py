@@ -42,7 +42,7 @@ import utility_functions as uf
 
 # Import the debug library
 # set is_debug to False in release version
-is_debug = False
+is_debug = True
 try:
     import pydevd
     has_pydevd = False
