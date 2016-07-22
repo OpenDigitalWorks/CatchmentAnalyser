@@ -10,7 +10,7 @@
 name=Catchment Analyser
 qgisMinimumVersion=2.0
 description=Network based catchment analysis
-version=0.2
+version=0.3
 author=Laurens Versluis
 email=l.versluis@spacesyntax.com
 

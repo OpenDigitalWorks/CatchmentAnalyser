@@ -66,8 +66,8 @@ class CatchmentAnalyser:
         self.iface = iface
         # Initialize plugin directory
         self.plugin_dir = os.path.dirname(__file__)
-        # Initialize analysis
-        self.catchmentAnalysis = catchment_tools.catchmentAnalysis(self.iface)
+        # # Initialize analysis
+        # self.catchmentAnalysis = catchment_tools.catchmentAnalysis(self.iface)
         # initialize locale
         locale = QSettings().value('locale/userLocale')[0:2]
         locale_path = os.path.join(
@@ -288,6 +288,7 @@ class CatchmentAnalyser:
             level=QgsMessageBar.WARNING,
             duration=5)
 
+
     def getAnalysisSettings(self):
 
         # Creating a combined settings dictionary
@@ -302,20 +303,26 @@ class CatchmentAnalyser:
             self.giveWarningMessage("Catchment Analyser: No origins selected!")
         elif not self.dlg.getDistances():
             self.giveWarningMessage("Catchment Analyser: No distances defined!")
+        elif self.dlg.getDistances():
+            for dis in self.dlg.getDistances():
+                if type(dis) != int:
+                    self.giveWarningMessage("Catchment Analyser: No numerical distances!")
         else:
             # Get settings from the dialog
             settings['network'] = self.getNetwork()
             settings['cost'] = self.dlg.getCostField()
             settings['origins'] = self.getOrigins()
             settings['name'] = self.dlg.getName()
-            settings['distances'] = self.dlg.getDistances()
+            settings['distances'] = [int(i) for i in self.dlg.getDistances()]
             settings['network tolerance'] = self.dlg.getNetworkTolerance()
             settings['polygon tolerance'] = int(self.dlg.getPolygonTolerance())
             settings['crs'] = self.getNetwork().crs()
-            settings['epsg'] = self.getNetwork().crs().authid()[5:] # removing EPSG:
+            settings['epsg'] = self.getNetwork().crs().authid()[5:]  # removing EPSG:
             settings['temp network'] = self.tempNetwork(settings['epsg'])
             settings['temp polygon'] = self.tempPolygon(settings['epsg'])
+            settings['output network check'] = self.dlg.networkCheck.isChecked()
             settings['output network'] = self.dlg.getNetworkOutput()
+            settings['output polygon check'] = self.dlg.polygonCheck.isChecked()
             settings['output polygon'] = self.dlg.getPolygonOutput()
 
             return settings
@@ -323,66 +330,109 @@ class CatchmentAnalyser:
 
     def runAnalysis(self):
         self.dlg.analysisProgress.reset()
-        if self.getAnalysisSettings():
-            # Getting al the settings
-            settings = self.getAnalysisSettings()
-            self.dlg.analysisProgress.setValue(1)
-            # Prepare the origins
-            origins = self.catchmentAnalysis.origin_preparation(
-                settings['origins'],
-                settings['name']
-            )
-            self.dlg.analysisProgress.setValue(2)
+        # Create an analysis instance
+        settings = self.getAnalysisSettings()
+        analysis = catchment_tools.catchmentAnalysis(self.iface, settings)
 
-            # Build the graph
-            graph, tied_origins = self.catchmentAnalysis.graph_builder(
-                settings['network'],
-                settings['cost'],
-                origins,
-                settings['network tolerance'],
-                settings['crs'],
-                settings['epsg']
-            )
-            self.dlg.analysisProgress.setValue(3)
+        # Create new thread and move the analysis class to it
+        analysis_thread = QThread()
+        analysis.moveToThread(analysis_thread)
 
-            # Run the analysis
-            catchment_network, catchment_points = self.catchmentAnalysis.graph_analysis(
-                graph,
-                tied_origins,
-                settings['distances']
-            )
-            self.dlg.analysisProgress.setValue(4)
+        # Setup signals
+        analysis.finished.connect(self.analysisFinish)
+        analysis.error.connect(self.analysisError)
+        analysis.progress.connect(self.dlg.analysisProgress.setValue)
+        self.dlg.cancelButton.clicked.connect(analysis.kill_analysis)
+        analysis.kill.connect(self.killAnalysis)
 
-            # Write and render the catchment polygons
-            if self.dlg.polygonCheck.isChecked():
-                output_polygon = self.catchmentAnalysis.polygon_writer(
-                    catchment_points,
-                    settings['distances'],
-                    settings['temp polygon'],
-                    settings['polygon tolerance']
-                )
-                if settings['output polygon']:
-                    uf.createShapeFile(output_polygon, settings['output polygon'], settings['crs'])
-                    output_polygon = QgsVectorLayer(settings['output polygon'], 'catchment_areas', 'ogr')
-                    self.catchmentAnalysis.polygon_renderer(output_polygon)
-                else:
-                    self.catchmentAnalysis.polygon_renderer(output_polygon)
-            self.dlg.analysisProgress.setValue(5)
+        # Start analysis
+        analysis_thread.started.connect(analysis.analysis)
+        analysis_thread.start()
+        self.analysis_thread = analysis_thread
+        self.analysis = analysis
 
-            # Write and render the catchment network
-            if self.dlg.networkCheck.isChecked():
-                output_network = self.catchmentAnalysis.network_writer(
-                    origins,
-                    catchment_network,
-                    settings['temp network']
-                )
-                if settings['output network']:
-                    uf.createShapeFile(output_network, settings['output network'], settings['crs'])
-                    output_network = QgsVectorLayer(settings['output network'], 'catchment_network', 'ogr')
-                    self.catchmentAnalysis.network_renderer(output_network, settings['distances'])
-                else:
-                    self.catchmentAnalysis.network_renderer(output_network, settings['distances'])
-            self.dlg.analysisProgress.setValue(6)
+
+    def analysisFinish(self, output):
+        # Clean up thread and analysis
+        self.analysis.deleteLater()
+        self.analysis_thread.quit()
+        self.analysis_thread.wait()
+        self.analysis_thread.deleteLater()
+        if output:
+            output_network = output['output network']
+            output_polygon = output['output polygon']
+            if output_network:
+                self.renderNetwork(output_network, self.dlg.getDistances())
+            if output_polygon:
+                self.renderPolygon(output_polygon)
+
+        # Closing the dialog
+        self.dlg.closeDialog()
+
+    def renderNetwork(self, output_network, distances):
+
+        # Settings
+        catchment_threshold = int(max(distances))
+
+        # settings for 10 color ranges depending on the radius
+        color_ranges = (
+            (0, (0.1 * catchment_threshold), '#ff0000'),
+            ((0.1 * catchment_threshold), (0.2 * catchment_threshold), '#ff5100'),
+            ((0.2 * catchment_threshold), (0.3 * catchment_threshold), '#ff9900'),
+            ((0.3 * catchment_threshold), (0.4 * catchment_threshold), '#ffc800'),
+            ((0.4 * catchment_threshold), (0.5 * catchment_threshold), '#ffee00'),
+            ((0.5 * catchment_threshold), (0.6 * catchment_threshold), '#a2ff00'),
+            ((0.6 * catchment_threshold), (0.7 * catchment_threshold), '#00ff91'),
+            ((0.7 * catchment_threshold), (0.8 * catchment_threshold), '#00f3ff'),
+            ((0.8 * catchment_threshold), (0.9 * catchment_threshold), '#0099ff'),
+            ((0.9 * catchment_threshold), (1 * catchment_threshold), '#0033ff'))
+
+        # list with all color ranges
+        ranges = []
+
+        # for each range create a symbol with its respective color
+        for lower, upper, color in color_ranges:
+            symbol = QgsSymbolV2.defaultSymbol(output_network.geometryType())
+            symbol.setColor(QColor(color))
+            symbol.setWidth(0.5)
+            range = QgsRendererRangeV2(lower, upper, symbol, '')
+            ranges.append(range)
+
+        # create renderer based on ranges and apply to network
+        renderer = QgsGraduatedSymbolRendererV2('min_dist', ranges)
+        output_network.setRendererV2(renderer)
+
+        # add network to the canvas
+        QgsMapLayerRegistry.instance().addMapLayer(output_network)
+
+
+    def renderPolygon(self, output_polygon):
+
+        # create a black dotted outline symbol layer
+        symbol = QgsFillSymbolV2().createSimple({'color': 'grey', 'outline_width': '0'})
+        symbol.setAlpha(0.2)
+
+        # create renderer and change the symbol layer in its symbol
+        output_polygon.rendererV2().setSymbol(symbol)
+
+        # add catchment to the canvas
+        QgsMapLayerRegistry.instance().addMapLayer(output_polygon)
+
+
+    def analysisError(self, e, exception_string):
+        QgsMessageLog.logMessage(
+            'Catchment Analyser raised an exception: %s' % exception_string,
+            level=QgsMessageLog.CRITICAL)
+
+        # Closing the dialog
+        self.dlg.closeDialog()
+
+
+    def killAnalysis(self):
+        self.analysis.deleteLater()
+        self.analysis_thread.quit()
+        self.analysis_thread.wait()
+        self.analysis_thread.deleteLater()
 
         # Closing the dialog
         self.dlg.closeDialog()

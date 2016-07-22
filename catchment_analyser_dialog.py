@@ -50,7 +50,7 @@ class CatchmentAnalyserDialog(QtGui.QDialog, FORM_CLASS):
 
         # Setup the progress bar
         self.analysisProgress.setMinimum(0)
-        self.analysisProgress.setMaximum(6)
+        self.analysisProgress.setMaximum(100)
 
     def setNetworkLayers(self, names):
         layers = ['-----']
@@ -114,8 +114,7 @@ class CatchmentAnalyserDialog(QtGui.QDialog, FORM_CLASS):
     def getDistances(self):
         if self.distancesText.text():
             distances_text = self.distancesText.text().split(',')
-            distances_integer = [int(i) for i in distances_text]
-            return distances_integer
+            return distances_text
 
 
     def getNetworkTolerance(self):

@@ -8,6 +8,8 @@ from qgis.utils import *
 
 import math
 
+import utility_functions as uf
+
 class customCost(QgsArcProperter):
     def __init__(self, costColumIndex, defaultValue):
         QgsArcProperter.__init__(self)
@@ -414,11 +416,18 @@ class concaveHull():
 
 class catchmentAnalysis(QObject):
 
-    def __init__(self, iface):
+    # Setup signals
+    finished = pyqtSignal(object)
+    error = pyqtSignal(Exception, basestring)
+    kill = pyqtSignal(bool)
+    progress = pyqtSignal(float)
+
+    def __init__(self, iface, settings):
         QObject.__init__(self)
         self.concave_hull = concaveHull()
         self.iface = iface
-
+        self.settings = settings
+        self.killed = False
 
     def origin_preparation(self, origin_vector, origin_name_field):
 
@@ -437,6 +446,7 @@ class catchmentAnalysis(QObject):
             origins.append({'name': origin_name, 'geom': f.geometry().centroid()})
 
         return origins
+
 
     def graph_builder(self, network, cost_field, origins, tolerance, crs, epsg):
 
@@ -482,6 +492,7 @@ class catchmentAnalysis(QObject):
 
         return graph, tied_origins
 
+
     def graph_analysis(self, graph, tied_origins, distances):
 
         # Settings
@@ -502,6 +513,11 @@ class catchmentAnalysis(QObject):
 
         # Loop through tied origins
         for i, origin in enumerate(tied_origins):
+
+            # Kill check
+            if self.killed == True:
+                self.kill.emit(True)
+                break
 
             origin_name = tied_origins[i]['name']
             catchment_points[origin_name] = {distance: [] for distance in distances}
@@ -535,6 +551,7 @@ class catchmentAnalysis(QObject):
 
         return catchment_network, catchment_points
 
+
     def network_writer(self, origins, catchment_network, output_network):
 
         # Variables
@@ -552,6 +569,11 @@ class catchmentAnalysis(QObject):
 
         # Loop through arcs in catchment network and write geometry and costs
         for index in catchment_network:
+
+            # Kill check
+            if self.killed == True:
+                self.kill.emit(True)
+                break
 
             # Get arc properties
             arc_geom = catchment_network[index]['geom']
@@ -601,6 +623,7 @@ class catchmentAnalysis(QObject):
 
         return output_network
 
+
     def polygon_writer(self, catchment_points, distances, output_polygon, polygon_tolerance):
 
         # Variables
@@ -609,6 +632,12 @@ class catchmentAnalysis(QObject):
 
         # Loop through origins and create list of aggregate polygon points
         for name in catchment_points:
+
+            # Kill check
+            if self.killed == True:
+                self.kill.emit(True)
+                break
+
             if not name in unique_origin_list:  # Check if origin is not duplicated
                 polygon_points[name] = catchment_points[name]  # Copy origin points for all radii
                 unique_origin_list.append(name)
@@ -621,6 +650,11 @@ class catchmentAnalysis(QObject):
         # Loop through polygon points and create their concave hull
         index = 1
         for name in polygon_points:
+
+            # Kill check
+            if self.killed == True:
+                self.kill.emit(True)
+                break
 
             # Loop through radii
             for distance in polygon_points[name]:
@@ -639,50 +673,80 @@ class catchmentAnalysis(QObject):
 
         return output_polygon
 
-    def network_renderer(self, output_network, distances):
 
-        # Settings
-        catchment_threshold = int(max(distances))
+    def analysis(self):
+        if self.settings:
+            output = None
+            try:
+                # Prepare the origins
+                origins = self.origin_preparation(
+                    self.settings['origins'],
+                    self.settings['name']
+                )
+                self.progress.emit(10)
+                # Kill check
+                if self.killed == True:
+                    self.kill.emit(True)
+                # Build the graph
+                graph, tied_origins = self.graph_builder(
+                    self.settings['network'],
+                    self.settings['cost'],
+                    origins,
+                    self.settings['network tolerance'],
+                    self.settings['crs'],
+                    self.settings['epsg']
+                )
+                self.progress.emit(30)
+                # Kill check
+                if self.killed == True:
+                    self.kill.emit(True)
+                    # Run the analysis
+                catchment_network, catchment_points = self.graph_analysis(
+                    graph,
+                    tied_origins,
+                    self.settings['distances']
+                )
+                self.progress.emit(50)
+                # Kill check
+                if self.killed == True:
+                    self.kill.emit(True)
+                    # Write and render the catchment polygons
+                if self.settings['output polygon check']:
+                    output_polygon = self.polygon_writer(
+                        catchment_points,
+                        self.settings['distances'],
+                        self.settings['temp polygon'],
+                        self.settings['polygon tolerance']
+                    )
+                    if self.settings['output polygon']:
+                        uf.createShapeFile(output_polygon, self.settings['output polygon'], self.settings['crs'])
+                        output_polygon = QgsVectorLayer(self.settings['output polygon'], 'catchment_areas', 'ogr')
+                self.progress.emit(80)
+                # Kill check
+                if self.killed == True:
+                    self.kill.emit(True)
+                    # Write and render the catchment network
+                if self.settings['output network check']:
+                    output_network = self.network_writer(
+                        origins,
+                        catchment_network,
+                        self.settings['temp network']
+                    )
+                    if self.settings['output network']:
+                        uf.createShapeFile(output_network, self.settings['output network'], self.settings['crs'])
+                        output_network = QgsVectorLayer(self.settings['output network'], 'catchment_network', 'ogr')
 
-        # settings for 10 color ranges depending on the radius
-        color_ranges = (
-            (0, (0.1 * catchment_threshold), '#ff0000'),
-            ((0.1 * catchment_threshold), (0.2 * catchment_threshold), '#ff5100'),
-            ((0.2 * catchment_threshold), (0.3 * catchment_threshold), '#ff9900'),
-            ((0.3 * catchment_threshold), (0.4 * catchment_threshold), '#ffc800'),
-            ((0.4 * catchment_threshold), (0.5 * catchment_threshold), '#ffee00'),
-            ((0.5 * catchment_threshold), (0.6 * catchment_threshold), '#a2ff00'),
-            ((0.6 * catchment_threshold), (0.7 * catchment_threshold), '#00ff91'),
-            ((0.7 * catchment_threshold), (0.8 * catchment_threshold), '#00f3ff'),
-            ((0.8 * catchment_threshold), (0.9 * catchment_threshold), '#0099ff'),
-            ((0.9 * catchment_threshold), (1 * catchment_threshold), '#0033ff'))
+                if self.killed == False:
+                    self.kill.emit(True)
+                    self.progress.emit(100)
+                    output = {'output network': output_network, 'output polygon': output_polygon}
 
-        # list with all color ranges
-        ranges = []
+            except Exception, e:
+                self.error.emit(e, traceback.format_exc())
+            self.finished.emit(output)
 
-        # for each range create a symbol with its respective color
-        for lower, upper, color in color_ranges:
-            symbol = QgsSymbolV2.defaultSymbol(output_network.geometryType())
-            symbol.setColor(QColor(color))
-            symbol.setWidth(0.5)
-            range = QgsRendererRangeV2(lower, upper, symbol, '')
-            ranges.append(range)
 
-        # create renderer based on ranges and apply to network
-        renderer = QgsGraduatedSymbolRendererV2('min_dist', ranges)
-        output_network.setRendererV2(renderer)
+    def kill_analysis(self):
+        self.killed = True
 
-        # add network to the canvas
-        QgsMapLayerRegistry.instance().addMapLayer(output_network)
 
-    def polygon_renderer(self, output_polygon):
-
-        # create a black dotted outline symbol layer
-        symbol = QgsFillSymbolV2().createSimple({'color': 'grey', 'outline_width': '0'})
-        symbol.setAlpha(0.2)
-
-        # create renderer and change the symbol layer in its symbol
-        output_polygon.rendererV2().setSymbol(symbol)
-
-        # add catchment to the canvas
-        QgsMapLayerRegistry.instance().addMapLayer(output_polygon)
