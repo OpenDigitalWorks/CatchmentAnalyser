@@ -32,6 +32,7 @@ import os.path
 
 # Import QGIS classes
 from qgis.core import *
+from qgis.gui import *
 from qgis.utils import *
 
 # Import tool classes
@@ -233,7 +234,7 @@ class CatchmentAnalyser:
     def updateCost(self):
         if self.dlg.costCheck.isChecked():
             network = self.getNetwork()
-            self.dlg.setCostFields(uf.getFieldNames(network))
+            self.dlg.setCostFields(uf.getNumericFieldNames(network))
         else:
             self.dlg.costCombo.clear()
             self.dlg.costCombo.setEnabled(False)
@@ -295,6 +296,8 @@ class CatchmentAnalyser:
         # Raise warnings
         if not self.getNetwork():
             self.giveWarningMessage("Catchment Analyser: No network selected!")
+        elif self.getNetwork().crs().geographicFlag() or self.getOrigins().crs().geographicFlag():
+            self.giveWarningMessage("Catchment Analyser: No projection found in input layers!")
         elif not self.getOrigins():
             self.giveWarningMessage("Catchment Analyser: No origins selected!")
         elif not self.dlg.getDistances():

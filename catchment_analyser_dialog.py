@@ -149,6 +149,7 @@ class CatchmentAnalyserDialog(QtGui.QDialog, FORM_CLASS):
     def closeEvent(self, QCloseEvent):
         self.closeDialog()
 
+
     def closeDialog(self):
         self.costCombo.clear()
         self.costCombo.setEnabled(False)

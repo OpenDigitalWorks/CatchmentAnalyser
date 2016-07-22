@@ -2,6 +2,7 @@ from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
 from qgis.core import *
+from qgis.gui import *
 from qgis.networkanalysis import *
 from qgis.utils import *
 
@@ -13,10 +14,13 @@ class customCost(QgsArcProperter):
         self.cost_column_index = costColumIndex
         self.default_value = defaultValue
 
-    def property(self, distance, Feature):
-        cost = float(Feature.attributes()[self.cost_column_index])
-        if cost <= 0.0:
-            return QVariant(self.default_value)
+    def property(self, distance, feature):
+        if not feature.attributes()[self.cost_column_index]:
+            return self.default_value
+        else:
+            cost = float(feature.attributes()[self.cost_column_index])
+            if cost <= 0.0:
+                return self.default_value
         return cost
 
     def requiredAttributes(self):
