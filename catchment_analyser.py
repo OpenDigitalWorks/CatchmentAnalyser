@@ -296,24 +296,26 @@ class CatchmentAnalyser:
 
         # Raise warnings
         if not self.getNetwork():
-            self.giveWarningMessage("Catchment Analyser: No network selected!")
+            self.giveWarningMessage("No network selected!")
         elif self.getNetwork().crs().geographicFlag() or self.getOrigins().crs().geographicFlag():
-            self.giveWarningMessage("Catchment Analyser: No projection found in input layers!")
+            self.giveWarningMessage("No layers with projection CRS!")
         elif not self.getOrigins():
             self.giveWarningMessage("Catchment Analyser: No origins selected!")
         elif not self.dlg.getDistances():
-            self.giveWarningMessage("Catchment Analyser: No distances defined!")
-        elif self.dlg.getDistances():
-            for dis in self.dlg.getDistances():
-                if type(dis) != int:
-                    self.giveWarningMessage("Catchment Analyser: No numerical distances!")
+            self.giveWarningMessage("No distances defined!")
         else:
+            try:
+                distances = [int(i) for i in self.dlg.getDistances()]
+            except ValueError:
+                self.giveWarningMessage("No numerical distances!")
+                return
+
             # Get settings from the dialog
             settings['network'] = self.getNetwork()
             settings['cost'] = self.dlg.getCostField()
             settings['origins'] = self.getOrigins()
             settings['name'] = self.dlg.getName()
-            settings['distances'] = [int(i) for i in self.dlg.getDistances()]
+            settings['distances'] = distances
             settings['network tolerance'] = self.dlg.getNetworkTolerance()
             settings['polygon tolerance'] = int(self.dlg.getPolygonTolerance())
             settings['crs'] = self.getNetwork().crs()
@@ -324,7 +326,7 @@ class CatchmentAnalyser:
             settings['output network'] = self.dlg.getNetworkOutput()
             settings['output polygon check'] = self.dlg.polygonCheck.isChecked()
             settings['output polygon'] = self.dlg.getPolygonOutput()
-
+            print settings
             return settings
 
 
@@ -353,24 +355,27 @@ class CatchmentAnalyser:
 
 
     def analysisFinish(self, output):
-        # Clean up thread and analysis
-        self.analysis.deleteLater()
-        self.analysis_thread.quit()
-        self.analysis_thread.wait()
-        self.analysis_thread.deleteLater()
+
+        # Render output
         if output:
             output_network = output['output network']
             output_polygon = output['output polygon']
+            distances = output['distances']
             if output_network:
-                self.renderNetwork(output_network, self.dlg.getDistances())
+                self.renderNetwork(output_network, distances)
             if output_polygon:
                 self.renderPolygon(output_polygon)
+
+        # Clean up thread and analysis
+        self.analysis_thread.quit()
+        self.analysis_thread.wait()
+        self.analysis_thread.deleteLater()
 
         # Closing the dialog
         self.dlg.closeDialog()
 
     def renderNetwork(self, output_network, distances):
-
+        print distances
         # Settings
         catchment_threshold = int(max(distances))
 

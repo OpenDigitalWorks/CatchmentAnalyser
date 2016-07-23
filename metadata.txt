@@ -14,10 +14,7 @@ version=0.3
 author=Laurens Versluis
 email=l.versluis@spacesyntax.com
 
-about=This plugin takes a line-based network and point-based origin layer and calculated the distance from each segment within a given distance to each of the origins.
-The tool outputs the catchment as lines and as a concave hull polygon layer.
-Credit for the concave hull functionality goes to the algorithm described by Adriano Moreira and Maribel Yasmina Santos.
-https://github.com/detlevn/QGIS-ConcaveHull-Plugin
+about=This plugin takes a line-based network and point-based origin layer and calculated the distance from each segment within a given distance to each of the origins. The tool outputs the catchment as lines and as a concave hull polygon layer. Credit for the concave hull functionality goes to the algorithm described by Adriano Moreira and Maribel Yasmina Santos.
 
 tracker=https://github.com/OpenDigitalWorks/CatchmentAnalyser/issues
 repository=https://github.com/OpenDigitalWorks/CatchmentAnalyser
@@ -27,8 +24,7 @@ repository=https://github.com/OpenDigitalWorks/CatchmentAnalyser
 
 # Uncomment the following line and add your changelog:
 # changelog=version 0.3: Added multi-threading and an improved concave hull module
-            version 0.2: Added custom cost
-            version 0.1: Initial build
+
 
 # Tags are comma separated with spaces allowed
 tags=network analysis, catchment, isochrones, concave hull, space syntax

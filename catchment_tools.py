@@ -739,7 +739,9 @@ class catchmentAnalysis(QObject):
                 if self.killed == False:
                     self.kill.emit(True)
                     self.progress.emit(100)
-                    output = {'output network': output_network, 'output polygon': output_polygon}
+                    output = {'output network': output_network,
+                              'output polygon': output_polygon,
+                              'distances': self.settings['distances']}
 
             except Exception, e:
                 self.error.emit(e, traceback.format_exc())
