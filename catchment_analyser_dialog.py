@@ -42,7 +42,7 @@ class CatchmentAnalyserDialog(QtGui.QDialog, FORM_CLASS):
 
 
         # Output internal GUI signals
-        self.distancesText.setPlaceholderText("Seperate with a comma")
+        self.distancesText.setPlaceholderText("Separate with a comma")
         self.networkText.setPlaceholderText("Save as temporary layer...")
         self.networkSaveButton.clicked.connect(self.setNetworkOutput)
         self.polygonText.setPlaceholderText("Save as temporary layer...")
@@ -50,7 +50,7 @@ class CatchmentAnalyserDialog(QtGui.QDialog, FORM_CLASS):
 
         # Setup the progress bar
         self.analysisProgress.setMinimum(0)
-        self.analysisProgress.setMaximum(6)
+        self.analysisProgress.setMaximum(100)
 
     def setNetworkLayers(self, names):
         layers = ['-----']
@@ -113,9 +113,8 @@ class CatchmentAnalyserDialog(QtGui.QDialog, FORM_CLASS):
 
     def getDistances(self):
         if self.distancesText.text():
-            distances_text = self.distancesText.text().split(',')
-            distances_integer = [int(i) for i in distances_text]
-            return distances_integer
+            distances = self.distancesText.text().split(',')
+            return distances
 
 
     def getNetworkTolerance(self):
