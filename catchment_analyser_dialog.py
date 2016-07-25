@@ -46,6 +46,7 @@ class CatchmentAnalyserDialog(QtGui.QDialog, FORM_CLASS):
         self.networkText.setPlaceholderText("Save as temporary layer...")
         self.networkSaveButton.clicked.connect(self.setNetworkOutput)
         self.polygonText.setPlaceholderText("Save as temporary layer...")
+        self.polygonSaveButton.clicked.connect(self.setPolygonOutput)
         self.cancelButton.clicked.connect(self.closeDialog)
 
         # Setup the progress bar
