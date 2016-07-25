@@ -1,3 +1,26 @@
+# -*- coding: utf-8 -*-
+"""
+/***************************************************************************
+ CatchmentAnalyser
+                             Catchment Analyser
+ Network based catchment analysis
+                              -------------------
+        begin                : 2016-05-19
+        author               : Laurens Versluis
+        copyright            : (C) 2016 by Space Syntax Limited
+        email                : l.versluis@spacesyntax.com
+ ***************************************************************************/
+
+/***************************************************************************
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *                                                                         *
+ ***************************************************************************/
+"""
+
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
@@ -421,6 +444,7 @@ class catchmentAnalysis(QObject):
     error = pyqtSignal(Exception, basestring)
     kill = pyqtSignal(bool)
     progress = pyqtSignal(float)
+    warning = pyqtSignal(str)
 
     def __init__(self, iface, settings):
         QObject.__init__(self)
@@ -666,9 +690,15 @@ class catchmentAnalysis(QObject):
                     p.setAttribute('origin', name)
                     p.setAttribute('distance', distance)
                     hull = self.concave_hull.concave_hull(points, polygon_tolerance)
-                    polygon_geom = QgsGeometry.fromPolygon([hull, ])
+                    # Check if hull is a actual polygon
+                    try:
+                        polygon_geom = QgsGeometry.fromPolygon([hull, ])
+                    except TypeError, e:
+                        self.warning.emit(e, 'Some polygons were invalid using this tolerance')
+                        break
                     p.setGeometry(polygon_geom)
                     output_polygon.dataProvider().addFeatures([p])
+
                     index += 1
 
         return output_polygon

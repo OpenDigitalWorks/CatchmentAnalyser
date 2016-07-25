@@ -2,12 +2,12 @@
 """
 /***************************************************************************
  CatchmentAnalyser
-                                 A QGIS plugin
+                             Catchment Analyser
  Network based catchment analysis
                               -------------------
         begin                : 2016-05-19
-        git sha              : $Format:%H$
-        copyright            : (C) 2016 by Laurens Versluis
+        author               : Laurens Versluis
+        copyright            : (C) 2016 by Space Syntax Limited
         email                : l.versluis@spacesyntax.com
  ***************************************************************************/
 
@@ -86,7 +86,7 @@ class CatchmentAnalyser:
         self.dlg = CatchmentAnalyserDialog()
         # Declare instance attributes
         self.actions = []
-        self.menu = self.tr(u'&Catchment Analyser')
+        self.menu = self.tr(u'&Space Syntax Toolkit')
         # TODO: We are going to let the user set this up in a future iteration
         self.toolbar = self.iface.addToolBar(u'CatchmentAnalyser')
         self.toolbar.setObjectName(u'CatchmentAnalyser')
@@ -184,7 +184,7 @@ class CatchmentAnalyser:
             self.toolbar.addAction(action)
 
         if add_to_menu:
-            self.iface.addPluginToMenu(
+            self.iface.addPluginToVectorMenu(
                 self.menu,
                 action)
 
@@ -206,8 +206,8 @@ class CatchmentAnalyser:
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""
         for action in self.actions:
-            self.iface.removePluginMenu(
-                self.tr(u'&Catchment Analyser'),
+            self.iface.removePluginVectorMenu(
+                self.menu,
                 action)
             self.iface.removeToolBarIcon(action)
         # remove the toolbar
@@ -326,7 +326,7 @@ class CatchmentAnalyser:
             settings['output network'] = self.dlg.getNetworkOutput()
             settings['output polygon check'] = self.dlg.polygonCheck.isChecked()
             settings['output polygon'] = self.dlg.getPolygonOutput()
-            print settings
+
             return settings
 
 
@@ -343,6 +343,7 @@ class CatchmentAnalyser:
         # Setup signals
         analysis.finished.connect(self.analysisFinish)
         analysis.error.connect(self.analysisError)
+        analysis.warning.connect(self.giveWarningMessage)
         analysis.progress.connect(self.dlg.analysisProgress.setValue)
         self.dlg.cancelButton.clicked.connect(analysis.kill_analysis)
         analysis.kill.connect(self.killAnalysis)
@@ -375,7 +376,7 @@ class CatchmentAnalyser:
         self.dlg.closeDialog()
 
     def renderNetwork(self, output_network, distances):
-        print distances
+
         # Settings
         catchment_threshold = int(max(distances))
 

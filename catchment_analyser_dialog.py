@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 """
 /***************************************************************************
- CatchmentAnalyserDialog
-                                 A QGIS plugin
+ CatchmentAnalyser
+                             Catchment Analyser
  Network based catchment analysis
-                             -------------------
+                              -------------------
         begin                : 2016-05-19
-        git sha              : $Format:%H$
-        copyright            : (C) 2016 by Laurens Versluis
+        author               : Laurens Versluis
+        copyright            : (C) 2016 by Space Syntax Limited
         email                : l.versluis@spacesyntax.com
  ***************************************************************************/
 
@@ -159,7 +159,7 @@ class CatchmentAnalyserDialog(QtGui.QDialog, FORM_CLASS):
         self.nameCheck.setCheckState(False)
         self.distancesText.clear()
         self.networkTolSpin.setValue(1)
-        self.polygonTolSpin.setValue(10)
+        self.polygonTolSpin.setValue(50)
         self.networkText.clear()
         self.polygonText.clear()
         self.analysisProgress.reset()

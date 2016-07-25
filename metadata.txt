@@ -10,11 +10,11 @@
 name=Catchment Analyser
 qgisMinimumVersion=2.0
 description=Network based catchment analysis
-version=0.3
+version=0.0.4
 author=Laurens Versluis
 email=l.versluis@spacesyntax.com
 
-about=This plugin takes a line-based network and point-based origin layer and calculated the distance from each segment within a given distance to each of the origins. The tool outputs the catchment as lines and as a concave hull polygon layer. Credit for the concave hull functionality goes to the algorithm described by Adriano Moreira and Maribel Yasmina Santos.
+about=This plugin takes a line-based network and point-based origin layer and calculated the distance from each segment within a given distance or list of distances to each of the origins. The tool outputs the catchment as lines and as a concave hull polygon layer. Credit for the concave hull functionality goes to the algorithm described by Adriano Moreira and Maribel Yasmina Santos.
 
 tracker=https://github.com/OpenDigitalWorks/CatchmentAnalyser/issues
 repository=https://github.com/OpenDigitalWorks/CatchmentAnalyser
@@ -23,17 +23,20 @@ repository=https://github.com/OpenDigitalWorks/CatchmentAnalyser
 # Recommended items:
 
 # Uncomment the following line and add your changelog:
-# changelog=version 0.3: Added multi-threading and an improved concave hull module
+changelog=  version 0.0.4: Added multi-threading and an improved concave hull module
+            version 0.0.3: Added possibility of multiple cost bands
+            version 0.0.2: Added custom cost functionality
+            version 0.0.1: Initial build
 
 
 # Tags are comma separated with spaces allowed
-tags=network analysis, catchment, isochrones, concave hull, space syntax
+tags=network, catchment, isochrones, concave hull, space syntax
 
-homepage=https://github.com/OpenDigitalWorks/CatchmentAnalyser
-category=Plugins
+homepage=https://github.com/OpenDigitalWorks
+category=Vector
 icon=icon.png
 # experimental flag
-experimental=True
+experimental=False
 
 # deprecated flag (applies to the whole plugin, not just a single version)
 deprecated=False
