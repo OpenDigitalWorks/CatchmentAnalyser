@@ -2,13 +2,13 @@
 """
 /***************************************************************************
  CatchmentAnalyser
-                                 A QGIS plugin
+                             Catchment Analyser
  Network based catchment analysis
-                             -------------------
+                              -------------------
         begin                : 2016-05-19
-        copyright            : (C) 2016 by Laurens Versluis
+        author               : Laurens Versluis
+        copyright            : (C) 2016 by Space Syntax Limited
         email                : l.versluis@spacesyntax.com
-        git sha              : $Format:%H$
  ***************************************************************************/
 
 /***************************************************************************

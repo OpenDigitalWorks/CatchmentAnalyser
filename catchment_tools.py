@@ -683,7 +683,7 @@ class catchmentAnalysis(QObject):
             # Loop through radii
             for distance in polygon_points[name]:
                 points = polygon_points[name][distance]
-                if len(points) > 2:
+                if len(points) > 2: # Only three points can create a polygon
                     # Create polygon feature
                     p = QgsFeature(output_polygon.pendingFields())
                     p.setAttribute('id', index)
@@ -693,13 +693,12 @@ class catchmentAnalysis(QObject):
                     # Check if hull is a actual polygon
                     try:
                         polygon_geom = QgsGeometry.fromPolygon([hull, ])
-                    except TypeError, e:
-                        self.warning.emit(e, 'Some polygons were invalid using this tolerance')
+                        p.setGeometry(polygon_geom)
+                        output_polygon.dataProvider().addFeatures([p])
+                        index += 1
+                    except TypeError:
+                        self.warning.emit('Polygon tolerance too high for cost band')
                         break
-                    p.setGeometry(polygon_geom)
-                    output_polygon.dataProvider().addFeatures([p])
-
-                    index += 1
 
         return output_polygon
 
