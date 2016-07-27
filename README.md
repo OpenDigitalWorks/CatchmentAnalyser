@@ -7,6 +7,19 @@ This plugin takes a line-based network and point-based origin layer and calculat
 ## Installation
 The plug-in can be installed from the QGIS Plugins Manager, and updates become automatically available once submitted to the QGIS plugins repository.
 
+## How to
+**Network layer**
+Choose the line-based vector layer that comprises a topological network you want to analyse. The vector layer needs to have a projected CRS. Vector layers with a geographic CRS are ignored.
+
+**Custom cost** 
+By default the tool will generate catchments based on the length of the network segments. If you want to apply a custom cost for time-based catchments for example please check the 'Custom cost' checkbox. If checked, choose the field of the network layer which contains the cost information from the drop-down menu. Costs need to be numerical.
+
+**Origin layer**
+Choose the point-based vector layer containing the origins from which catchment will be calculated. 
+
+**Cost bands**:     
+By default the origin names will be based on the the feature ids. If you have specific names of the origins please check 'Origin names' checkbox. If checked, choose the field of the origin layer that contains the origin names information. 
+
 ## Software Requirements
 QGIS (2.0 or above) - http://www.qgis.org/en/site/
 

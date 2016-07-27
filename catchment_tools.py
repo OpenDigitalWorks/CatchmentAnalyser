@@ -535,7 +535,12 @@ class catchmentAnalysis(QObject):
             arcGeom = QgsGeometry.fromPolyline([inVertexGeom, outVertexGeom])
             catchment_network[index] = {'geom': arcGeom, 'cost': {}}
 
-        # Loop through tied origins
+        # Loop through tied origins and write origin names
+        for i, origin in enumerate(tied_origins):
+            origin_name = tied_origins[i]['name']
+            catchment_points[origin_name] = {distance: [] for distance in distances}
+
+        # Loop through tied origins and write costs and polygon points
         for i, origin in enumerate(tied_origins):
 
             # Kill check
@@ -544,7 +549,6 @@ class catchmentAnalysis(QObject):
                 break
 
             origin_name = tied_origins[i]['name']
-            catchment_points[origin_name] = {distance: [] for distance in distances}
             originVertexId = graph.findVertex(tied_origins[i]['vertex'])
 
             # Run dijkstra and get tree and cost
@@ -566,7 +570,11 @@ class catchmentAnalysis(QObject):
 
                 # If arc is connected and within the maximum radius set cost
                 elif arcCost < catchment_threshold and tree[inVertexId] != -1:
-                    catchment_network[index]['cost'][origin_name] = int(arcCost)
+                    if origin_name in catchment_network[index]['cost']:
+                        if catchment_network[index]['cost'][origin_name] > int(arcCost):
+                            catchment_network[index]['cost'][origin_name] = int(arcCost)
+                    else:
+                        catchment_network[index]['cost'][origin_name] = int(arcCost)
 
                 # Add catchment points for each given radius
                 for distance in distances:
@@ -621,19 +629,10 @@ class catchmentAnalysis(QObject):
 
                 # Read the list of costs and write them to output network
                 for name in arc_cost_dict:
-
                     cost = arc_cost_dict[name]
                     arc_cost_list.append(cost)
-
-                    # If no entry set cost
-                    if not f[name]:
-                        f.setAttribute(name, cost)
-                        if not f['min_dist']:
-                            f.setAttribute('min_dist', cost)
-                    else:
-                        # Replace current cost when less than cost
-                        if f[name] < cost:
-                            f.setAttribute("%s" % name, cost)
+                    f.setAttribute(name, cost)
+                    f.setAttribute("%s" % name, cost)
 
                 # Set minimum cost
                 if arc_cost_list > 0:
@@ -673,32 +672,36 @@ class catchmentAnalysis(QObject):
 
         # Loop through polygon points and create their concave hull
         index = 1
+        hull_validity = True
         for name in polygon_points:
+            if hull_validity:
 
-            # Kill check
-            if self.killed == True:
-                self.kill.emit(True)
-                break
+                # Kill check
+                if self.killed == True:
+                    self.kill.emit(True)
+                    break
 
-            # Loop through radii
-            for distance in polygon_points[name]:
-                points = polygon_points[name][distance]
-                if len(points) > 2: # Only three points can create a polygon
-                    # Create polygon feature
-                    p = QgsFeature(output_polygon.pendingFields())
-                    p.setAttribute('id', index)
-                    p.setAttribute('origin', name)
-                    p.setAttribute('distance', distance)
-                    hull = self.concave_hull.concave_hull(points, polygon_tolerance)
-                    # Check if hull is a actual polygon
-                    try:
-                        polygon_geom = QgsGeometry.fromPolygon([hull, ])
-                        p.setGeometry(polygon_geom)
-                        output_polygon.dataProvider().addFeatures([p])
-                        index += 1
-                    except TypeError:
-                        self.warning.emit('Polygon tolerance too high for cost band')
-                        break
+                # Loop through radii
+                for distance in polygon_points[name]:
+                    points = polygon_points[name][distance]
+                    if len(points) > 2: # Only three points can create a polygon
+                        # Create polygon feature
+                        p = QgsFeature(output_polygon.pendingFields())
+                        p.setAttribute('id', index)
+                        p.setAttribute('origin', name)
+                        p.setAttribute('distance', distance)
+                        hull = self.concave_hull.concave_hull(points, polygon_tolerance)
+                        # Check if hull is a actual polygon
+                        try:
+                            polygon_geom = QgsGeometry.fromPolygon([hull, ])
+                            p.setGeometry(polygon_geom)
+                            output_polygon.dataProvider().addFeatures([p])
+                            index += 1
+                        except TypeError:
+                            hull_validity = False
+                            self.warning.emit('Polygon tolerance too high for cost band')
+                            self.kill = True
+                            break
 
         return output_polygon
 
