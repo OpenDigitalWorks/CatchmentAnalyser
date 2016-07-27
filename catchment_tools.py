@@ -536,20 +536,20 @@ class catchmentAnalysis(QObject):
             catchment_network[index] = {'geom': arcGeom, 'cost': {}}
 
         # Loop through tied origins and write origin names
-        for i, origin in enumerate(tied_origins):
-            origin_name = tied_origins[i]['name']
-            catchment_points[origin_name] = {distance: [] for distance in distances}
+        for tied_point, origin in enumerate(tied_origins):
+            # origin_name = tied_origins[i]['name']
+            catchment_points[tied_point] = {distance: [] for distance in distances}
 
         # Loop through tied origins and write costs and polygon points
-        for i, origin in enumerate(tied_origins):
+        for tied_point, origin in enumerate(tied_origins):
 
             # Kill check
             if self.killed == True:
                 self.kill.emit(True)
                 break
 
-            origin_name = tied_origins[i]['name']
-            originVertexId = graph.findVertex(tied_origins[i]['vertex'])
+            origin_name = tied_origins[tied_point]['name']
+            originVertexId = graph.findVertex(tied_origins[tied_point]['vertex'])
 
             # Run dijkstra and get tree and cost
             (tree, cost) = QgsGraphAnalyzer.dijkstra(graph, originVertexId, 0)
@@ -579,7 +579,7 @@ class catchmentAnalysis(QObject):
                 # Add catchment points for each given radius
                 for distance in distances:
                     if arcCost < distance:
-                        catchment_points[origin_name][distance].extend([inVertexGeom, ])
+                        catchment_points[tied_point][distance].extend([inVertexGeom, ])
 
         return catchment_network, catchment_points
 
@@ -647,61 +647,67 @@ class catchmentAnalysis(QObject):
         return output_network
 
 
-    def polygon_writer(self, catchment_points, distances, output_polygon, polygon_tolerance):
+    def polygon_writer(self, catchment_points, tied_origins, distances, output_polygon, polygon_tolerance):
 
-        # Variables
-        unique_origin_list = []
-        polygon_points = {}
+        # Setup unique origin dictionary containing all distances
+        polygon_dict = {}
+        for tied_point in tied_origins:
+            name = tied_origins[tied_point]['name']
+            polygon_dict[name] = {distance: [] for distance in distances}
 
-        # Loop through origins and create list of aggregate polygon points
-        for name in catchment_points:
-
-            # Kill check
-            if self.killed == True:
-                self.kill.emit(True)
-                break
-
-            if not name in unique_origin_list:  # Check if origin is not duplicated
-                polygon_points[name] = catchment_points[name]  # Copy origin points for all radii
-                unique_origin_list.append(name)
-
-                # Loop through distances and append points
-                for distance in distances:
-                    points = catchment_points[name][distance]
-                    polygon_points[name][distance].extend(points)
-
-        # Loop through polygon points and create their concave hull
+        # Create list of hulls for each distance and each unique origin
         index = 1
         hull_validity = True
-        for name in polygon_points:
+        for tied_point in catchment_points:
             if hull_validity:
-
-                # Kill check
-                if self.killed == True:
-                    self.kill.emit(True)
-                    break
-
-                # Loop through radii
-                for distance in polygon_points[name]:
-                    points = polygon_points[name][distance]
-                    if len(points) > 2: # Only three points can create a polygon
-                        # Create polygon feature
-                        p = QgsFeature(output_polygon.pendingFields())
-                        p.setAttribute('id', index)
-                        p.setAttribute('origin', name)
-                        p.setAttribute('distance', distance)
+                name = tied_origins[tied_point]['name']
+                for distance in distances:
+                    points = catchment_points[tied_point][distance]
+                    if len(points) > 2:  # Only three points can create a polygon
                         hull = self.concave_hull.concave_hull(points, polygon_tolerance)
-                        # Check if hull is a actual polygon
-                        try:
-                            polygon_geom = QgsGeometry.fromPolygon([hull, ])
-                            p.setGeometry(polygon_geom)
-                            output_polygon.dataProvider().addFeatures([p])
-                            index += 1
-                        except TypeError:
-                            hull_validity = False
-                            self.warning.emit('Polygon tolerance too high for cost band')
-                            self.kill = True
-                            break
+                        polygon_dict[name][distance].append(hull)
+                        print len(polygon_dict[name][distance])
+                        if len(polygon_dict[name][distance]) < 2: # Write if only one hull
+                            # Check if hull is a actual polygon
+                            try:
+                                p = QgsFeature(output_polygon.pendingFields())
+                                p.setAttribute('id', index)
+                                p.setAttribute('origin', name)
+                                p.setAttribute('distance', distance)
+                                polygon_geom = QgsGeometry.fromPolygon([hull, ])
+                                p.setGeometry(polygon_geom)
+                                output_polygon.dataProvider().addFeatures([p])
+                                index += 1
+                            except TypeError:
+                                hull_validity = False
+                                self.warning.emit('Polygon tolerance too high for cost band')
+                                self.kill = True
+                                break
+                        else:
+                            # Merge polygons when they intersect
+                            polygon = None
+                            for hull in polygon_dict[name][distance]:
+                                geom = QgsGeometry.fromPolygon([hull, ])
+                                if polygon:
+                                    if polygon.intersects(geom):
+                                        polygon = polygon.combine(geom)
+                                else:
+                                    polygon = geom
+
+                            # Check if hull is a actual polygon
+                            try:
+                                p = QgsFeature(output_polygon.pendingFields())
+                                p.setAttribute('id', index)
+                                p.setAttribute('origin', name)
+                                p.setAttribute('distance', distance)
+                                p.setGeometry(polygon)
+                                output_polygon.dataProvider().addFeatures([p])
+                                index += 1
+                            except TypeError:
+                                hull_validity = False
+                                self.warning.emit('Polygon tolerance too high for cost band')
+                                self.kill = True
+                                break
 
         return output_polygon
 
@@ -746,6 +752,7 @@ class catchmentAnalysis(QObject):
                 if self.settings['output polygon check']:
                     output_polygon = self.polygon_writer(
                         catchment_points,
+                        tied_origins,
                         self.settings['distances'],
                         self.settings['temp polygon'],
                         self.settings['polygon tolerance']
