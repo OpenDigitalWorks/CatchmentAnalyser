@@ -537,8 +537,10 @@ class catchmentAnalysis(QObject):
 
         # Loop through tied origins and write origin names
         for tied_point, origin in enumerate(tied_origins):
-            # origin_name = tied_origins[i]['name']
-            catchment_points[tied_point] = {distance: [] for distance in distances}
+            origin_name = tied_origins[tied_point]['name']
+            catchment_points[tied_point] = {'name': origin_name}
+            catchment_points[tied_point].update({distance: [] for distance in distances})
+
 
         # Loop through tied origins and write costs and polygon points
         for tied_point, origin in enumerate(tied_origins):
@@ -580,6 +582,8 @@ class catchmentAnalysis(QObject):
                 for distance in distances:
                     if arcCost < distance:
                         catchment_points[tied_point][distance].extend([inVertexGeom, ])
+
+
 
         return catchment_network, catchment_points
 
@@ -696,6 +700,7 @@ class catchmentAnalysis(QObject):
                                         polygons.append(geom)
                                 else:
                                     polygons.append(geom)
+
 
                             for polygon in polygons:
                                 # Check if hull is a actual polygon
