@@ -685,29 +685,33 @@ class catchmentAnalysis(QObject):
                                 break
                         else:
                             # Merge polygons when they intersect
-                            polygon = None
+                            polygons = []
                             for hull in polygon_dict[name][distance]:
                                 geom = QgsGeometry.fromPolygon([hull, ])
-                                if polygon:
-                                    if polygon.intersects(geom):
-                                        polygon = polygon.combine(geom)
+                                if polygons:
+                                    for polygon in polygons:
+                                        if geom.intersects(polygon):
+                                            polygon = polygon.combine(geom)
+                                    else:
+                                        polygons.append(geom)
                                 else:
-                                    polygon = geom
+                                    polygons.append(geom)
 
-                            # Check if hull is a actual polygon
-                            try:
-                                p = QgsFeature(output_polygon.pendingFields())
-                                p.setAttribute('id', index)
-                                p.setAttribute('origin', name)
-                                p.setAttribute('distance', distance)
-                                p.setGeometry(polygon)
-                                output_polygon.dataProvider().addFeatures([p])
-                                index += 1
-                            except TypeError:
-                                hull_validity = False
-                                self.warning.emit('Polygon tolerance too high for cost band')
-                                self.kill = True
-                                break
+                            for polygon in polygons:
+                                # Check if hull is a actual polygon
+                                try:
+                                    p = QgsFeature(output_polygon.pendingFields())
+                                    p.setAttribute('id', index)
+                                    p.setAttribute('origin', name)
+                                    p.setAttribute('distance', distance)
+                                    p.setGeometry(polygon)
+                                    output_polygon.dataProvider().addFeatures([p])
+                                    index += 1
+                                except TypeError:
+                                    hull_validity = False
+                                    self.warning.emit('Polygon tolerance too high for cost band')
+                                    self.kill = True
+                                    break
 
         return output_polygon
 
