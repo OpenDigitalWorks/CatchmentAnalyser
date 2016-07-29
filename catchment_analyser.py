@@ -371,6 +371,7 @@ class CatchmentAnalyser:
         self.analysis_thread.quit()
         self.analysis_thread.wait()
         self.analysis_thread.deleteLater()
+        self.analysis.deleteLater()
 
         # Closing the dialog
         self.dlg.closeDialog()

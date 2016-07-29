@@ -655,6 +655,10 @@ class catchmentAnalysis(QObject):
         unique_origins_list = []
         polygon_dict = {}
         for tied_point in catchment_points:
+            # Kill check
+            if self.killed == True:
+                self.kill.emit(True)
+                break
             name = catchment_points[tied_point]['name']
             if name not in unique_origins_list:
                 polygon_dict[name] = {distance: [] for distance in distances}
@@ -665,7 +669,6 @@ class catchmentAnalysis(QObject):
                     hull = self.concave_hull.concave_hull(points, polygon_tolerance)
                     polygon_dict[name][distance].append(hull)
                     print len(polygon_dict[name][distance])
-
 
         # Create list of hulls for each distance and each unique origin
         index = 1
