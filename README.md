@@ -18,7 +18,25 @@ By default the tool will generate catchments based on the length of the network 
 Choose the point-based vector layer containing the origins from which catchment will be calculated. 
 
 **Cost bands**:     
-By default the origin names will be based on the the feature ids. If you have specific names of the origins please check 'Origin names' checkbox. If checked, choose the field of the origin layer that contains the origin names information. 
+By default the origin names will be based on the the feature ids. If you have specific names of the origins please check 'Origin names' checkbox. If checked, choose the field of the origin layer that contains the origin names information. The output network will be aggregated according the origin name.
+
+**Network tolerance**: 
+The network layer might contain un-connected lines. Gabs up to the network tolerance will be read as connected.
+
+**Polygon tolerance**: 
+The Catchment Analyser tool creates concave hull polygons describing the catchment from a specific origin. The polygon tolerance defines the level of 'concaveness' of the catchment. The lower the value, the more concave the catchment. The higher the value the more convex the catchment. 
+
+**Catchment network**: 
+The tool provides a catchment network output based on the original network layer with cost information on every origin. If checked the tool will generate the network as a temporary layer or as a shapefile using the browse button. By default the output network is renderer using the cost to the nearest origin.
+
+**Catchment polygon**: 
+The tool provides a catchment polygon output for each origin and each specified cost. If checked the tool will generate the polygons as a temporary layer or as a shapefile using the browse button. By default the output polygons are rendered as grey opaque areas. 
+
+**Run**: 
+Pressing the run button will activate the analysis for all the current settings.
+
+**Cancel**: 
+Pressing cancel will close and terminate the Catchment Analyser.
 
 ## Software Requirements
 QGIS (2.0 or above) - http://www.qgis.org/en/site/

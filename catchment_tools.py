@@ -442,7 +442,6 @@ class catchmentAnalysis(QObject):
     # Setup signals
     finished = pyqtSignal(object)
     error = pyqtSignal(Exception, basestring)
-    kill = pyqtSignal(bool)
     progress = pyqtSignal(float)
     warning = pyqtSignal(str)
 
@@ -470,7 +469,6 @@ class catchmentAnalysis(QObject):
             origins.append({'name': origin_name, 'geom': f.geometry().centroid()})
 
         return origins
-
 
     def graph_builder(self, network, cost_field, origins, tolerance, crs, epsg):
 
@@ -516,9 +514,7 @@ class catchmentAnalysis(QObject):
 
         return graph, tied_origins
 
-
     def graph_analysis(self, graph, tied_origins, distances):
-
         # Settings
         catchment_threshold = max(distances)
 
@@ -544,11 +540,6 @@ class catchmentAnalysis(QObject):
 
         # Loop through tied origins and write costs and polygon points
         for tied_point, origin in enumerate(tied_origins):
-
-            # Kill check
-            if self.killed == True:
-                self.kill.emit(True)
-                break
 
             origin_name = tied_origins[tied_point]['name']
             originVertexId = graph.findVertex(tied_origins[tied_point]['vertex'])
@@ -585,9 +576,7 @@ class catchmentAnalysis(QObject):
 
         return catchment_network, catchment_points
 
-
     def network_writer(self, origins, catchment_network, output_network):
-
         # Variables
         arc_length_list = []
 
@@ -603,11 +592,6 @@ class catchmentAnalysis(QObject):
 
         # Loop through arcs in catchment network and write geometry and costs
         for index in catchment_network:
-
-            # Kill check
-            if self.killed == True:
-                self.kill.emit(True)
-                break
 
             # Get arc properties
             arc_geom = catchment_network[index]['geom']
@@ -648,90 +632,49 @@ class catchmentAnalysis(QObject):
 
         return output_network
 
-
     def polygon_writer(self, catchment_points, distances, output_polygon, polygon_tolerance):
 
         # Setup unique origin dictionary containing all distances
         unique_origins_list = []
         polygon_dict = {}
         for tied_point in catchment_points:
-            # Kill check
-            if self.killed == True:
-                self.kill.emit(True)
-                break
             name = catchment_points[tied_point]['name']
             if name not in unique_origins_list:
                 polygon_dict[name] = {distance: [] for distance in distances}
                 unique_origins_list.append(name)
+            # Creating hull for each distance and if appliclable in a list
             for distance in distances:
                 points = catchment_points[tied_point][distance]
                 if len(points) > 2:  # Only three points can create a polygon
                     hull = self.concave_hull.concave_hull(points, polygon_tolerance)
                     polygon_dict[name][distance].append(hull)
-                    print len(polygon_dict[name][distance])
 
-        # Create list of hulls for each distance and each unique origin
+        # Generate the polygons
         index = 1
         hull_validity = True
         for name in polygon_dict:
             if hull_validity:
                 for distance in distances:
-                    hull_list = polygon_dict[name][distance]
-
-                    if len(hull_list) == 1: # Write if only one hull
+                    for hull in polygon_dict[name][distance]: # Later add combine functionality
                         # Check if hull is a actual polygon
                         try:
                             p = QgsFeature(output_polygon.pendingFields())
                             p.setAttribute('id', index)
                             p.setAttribute('origin', name)
                             p.setAttribute('distance', distance)
-                            polygon_geom = QgsGeometry.fromPolygon(hull_list)
+                            polygon_geom = QgsGeometry.fromPolygon([hull,])
                             p.setGeometry(polygon_geom)
                             output_polygon.dataProvider().addFeatures([p])
                             index += 1
                         except TypeError:
                             hull_validity = False
                             self.warning.emit('Polygon tolerance too high for cost band')
-                            self.kill = True
-                            break
-                    else:
-                        print 'poop'
-                        # Merge polygons when they intersect
-                        polygon = None
-                        polygons = []
-                        print len(hull_list)
-                        for hull in hull_list:
-                            geom = QgsGeometry.fromPolygon([hull, ])
-                            if polygons:
-                                for index, polygon in enumerate(polygons):
-                                    if geom.intersects(polygon):
-                                        polygons[index] = geom.combine(polygon)
-                                    else:
-                                        polygons.append(geom)
-                            else:
-                                polygons.append(geom)
-
-                        # Check if hull is a actual polygon
-                        try:
-                            p = QgsFeature(output_polygon.pendingFields())
-                            p.setAttribute('id', index)
-                            p.setAttribute('origin', name)
-                            p.setAttribute('distance', distance)
-                            p.setGeometry(polygon)
-                            output_polygon.dataProvider().addFeatures([p])
-                            index += 1
-                        except TypeError:
-                            hull_validity = False
-                            self.warning.emit('Polygon tolerance too high for cost band')
-                            self.kill = True
                             break
 
         return output_polygon
 
-
     def analysis(self):
         if self.settings:
-            output = None
             try:
                 # Prepare the origins
                 origins = self.origin_preparation(
@@ -740,8 +683,7 @@ class catchmentAnalysis(QObject):
                 )
                 self.progress.emit(10)
                 # Kill check
-                if self.killed == True:
-                    self.kill.emit(True)
+                if self.killed: return
                 # Build the graph
                 graph, tied_origins = self.graph_builder(
                     self.settings['network'],
@@ -753,8 +695,7 @@ class catchmentAnalysis(QObject):
                 )
                 self.progress.emit(30)
                 # Kill check
-                if self.killed == True:
-                    self.kill.emit(True)
+                if self.killed: return
                     # Run the analysis
                 catchment_network, catchment_points = self.graph_analysis(
                     graph,
@@ -763,8 +704,7 @@ class catchmentAnalysis(QObject):
                 )
                 self.progress.emit(50)
                 # Kill check
-                if self.killed == True:
-                    self.kill.emit(True)
+                if self.killed: return
                     # Write and render the catchment polygons
                 if self.settings['output polygon check']:
                     output_polygon = self.polygon_writer(
@@ -778,8 +718,7 @@ class catchmentAnalysis(QObject):
                         output_polygon = QgsVectorLayer(self.settings['output polygon'], 'catchment_areas', 'ogr')
                 self.progress.emit(80)
                 # Kill check
-                if self.killed == True:
-                    self.kill.emit(True)
+                if self.killed: return
                     # Write and render the catchment network
                 if self.settings['output network check']:
                     output_network = self.network_writer(
@@ -791,19 +730,15 @@ class catchmentAnalysis(QObject):
                         uf.createShapeFile(output_network, self.settings['output network'], self.settings['crs'])
                         output_network = QgsVectorLayer(self.settings['output network'], 'catchment_network', 'ogr')
 
-                if self.killed == False:
-                    self.kill.emit(True)
+                if self.killed is False:
                     self.progress.emit(100)
                     output = {'output network': output_network,
                               'output polygon': output_polygon,
                               'distances': self.settings['distances']}
+                    self.finished.emit(output)
 
             except Exception, e:
                 self.error.emit(e, traceback.format_exc())
-            self.finished.emit(output)
 
-
-    def kill_analysis(self):
+    def kill(self):
         self.killed = True
-
-

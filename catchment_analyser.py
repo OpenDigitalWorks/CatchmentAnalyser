@@ -273,7 +273,7 @@ class CatchmentAnalyser:
         if self.dlg.polygonCheck.isChecked():
             output_polygon = uf.createTempLayer(
                 'catchment_areas',
-                'POLYGON',
+                'MULTIPOLYGON',
                 epsg,
                 ['id', 'origin', 'distance'],
                 [QVariant.Int, QVariant.Int, QVariant.Int]
@@ -287,7 +287,6 @@ class CatchmentAnalyser:
             "%s" % (message),
             level=QgsMessageBar.WARNING,
             duration=5)
-
 
     def getAnalysisSettings(self):
 
@@ -329,7 +328,6 @@ class CatchmentAnalyser:
 
             return settings
 
-
     def runAnalysis(self):
         self.dlg.analysisProgress.reset()
         # Create an analysis instance
@@ -341,12 +339,11 @@ class CatchmentAnalyser:
         analysis.moveToThread(analysis_thread)
 
         # Setup signals
+        self.dlg.cancelButton.clicked.connect(analysis.kill) # Does not work!!!
         analysis.finished.connect(self.analysisFinish)
         analysis.error.connect(self.analysisError)
         analysis.warning.connect(self.giveWarningMessage)
         analysis.progress.connect(self.dlg.analysisProgress.setValue)
-        self.dlg.cancelButton.clicked.connect(analysis.kill_analysis)
-        analysis.kill.connect(self.killAnalysis)
 
         # Start analysis
         analysis_thread.started.connect(analysis.analysis)
@@ -354,8 +351,12 @@ class CatchmentAnalyser:
         self.analysis_thread = analysis_thread
         self.analysis = analysis
 
-
     def analysisFinish(self, output):
+        # Clean up thread and analysis
+        self.analysis_thread.quit()
+        self.analysis_thread.wait()
+        self.analysis_thread.deleteLater()
+        self.analysis.deleteLater()
 
         # Render output
         if output:
@@ -366,12 +367,8 @@ class CatchmentAnalyser:
                 self.renderNetwork(output_network, distances)
             if output_polygon:
                 self.renderPolygon(output_polygon)
-
-        # Clean up thread and analysis
-        self.analysis_thread.quit()
-        self.analysis_thread.wait()
-        self.analysis_thread.deleteLater()
-        self.analysis.deleteLater()
+        else:
+            self.giveWarningMessage('Something went wrong')
 
         # Closing the dialog
         self.dlg.closeDialog()
@@ -412,7 +409,6 @@ class CatchmentAnalyser:
         # add network to the canvas
         QgsMapLayerRegistry.instance().addMapLayer(output_network)
 
-
     def renderPolygon(self, output_polygon):
 
         # create a black dotted outline symbol layer
@@ -425,7 +421,6 @@ class CatchmentAnalyser:
         # add catchment to the canvas
         QgsMapLayerRegistry.instance().addMapLayer(output_polygon)
 
-
     def analysisError(self, e, exception_string):
         QgsMessageLog.logMessage(
             'Catchment Analyser raised an exception: %s' % exception_string,
@@ -433,18 +428,6 @@ class CatchmentAnalyser:
 
         # Closing the dialog
         self.dlg.closeDialog()
-
-
-    def killAnalysis(self):
-
-        self.analysis_thread.quit()
-        self.analysis_thread.wait()
-        self.analysis_thread.deleteLater()
-        self.analysis.deleteLater()
-
-        # Closing the dialog
-        self.dlg.closeDialog()
-
 
     def run(self):
         # Show the dialog
