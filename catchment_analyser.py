@@ -88,8 +88,7 @@ class CatchmentAnalyser:
         self.actions = []
         self.menu = self.tr(u'&Space Syntax Toolkit')
         # TODO: We are going to let the user set this up in a future iteration
-        self.toolbar = self.iface.addToolBar(u'CatchmentAnalyser')
-        self.toolbar.setObjectName(u'CatchmentAnalyser')
+        self.toolbar = self.iface.pluginToolBar()
 
         # Setup debugger
         if has_pydevd and is_debug:
@@ -211,7 +210,7 @@ class CatchmentAnalyser:
                 action)
             self.iface.removeToolBarIcon(action)
         # remove the toolbar
-        del self.toolbar
+        # del self.toolbar
 
 
     def updateLayers(self):
@@ -333,13 +332,11 @@ class CatchmentAnalyser:
         # Create an analysis instance
         settings = self.getAnalysisSettings()
         analysis = catchment_tools.catchmentAnalysis(self.iface, settings)
-
         # Create new thread and move the analysis class to it
         analysis_thread = QThread()
         analysis.moveToThread(analysis_thread)
-
         # Setup signals
-        self.dlg.cancelButton.clicked.connect(analysis.kill) # Does not work!!!
+        self.dlg.cancelButton.clicked.connect(self.killAnalysis)
         analysis.finished.connect(self.analysisFinish)
         analysis.error.connect(self.analysisError)
         analysis.warning.connect(self.giveWarningMessage)
@@ -428,6 +425,18 @@ class CatchmentAnalyser:
 
         # Closing the dialog
         self.dlg.closeDialog()
+
+    def killAnalysis(self):
+        # Check if the analysis is running
+        if self.analysis:
+            # Clean up thread and analysis
+            self.analysis.kill()
+            self.analysis_thread.quit()
+            self.analysis_thread.wait()
+            self.analysis_thread.deleteLater()
+            self.analysis.deleteLater()
+            # Closing the dialog
+            self.dlg.closeDialog()
 
     def run(self):
         # Show the dialog

@@ -539,8 +539,10 @@ class catchmentAnalysis(QObject):
 
 
         # Loop through tied origins and write costs and polygon points
+        i = 1
         for tied_point, origin in enumerate(tied_origins):
-
+            self.progress.emit(20 + int(20 * i / len(tied_origins)))
+            if self.killed == True: return
             origin_name = tied_origins[tied_point]['name']
             originVertexId = graph.findVertex(tied_origins[tied_point]['vertex'])
 
@@ -573,7 +575,7 @@ class catchmentAnalysis(QObject):
                 for distance in distances:
                     if arcCost < distance:
                         catchment_points[tied_point][distance].extend([inVertexGeom, ])
-
+            i += 1
         return catchment_network, catchment_points
 
     def network_writer(self, origins, catchment_network, output_network):
@@ -591,8 +593,10 @@ class catchmentAnalysis(QObject):
         output_network.updateFields()
 
         # Loop through arcs in catchment network and write geometry and costs
+        i = 1
         for index in catchment_network:
-
+            self.progress.emit(70 + int(30 * i / len(catchment_network)))
+            if self.killed == True: return
             # Get arc properties
             arc_geom = catchment_network[index]['geom']
             arc_length = arc_geom.length()
@@ -629,6 +633,7 @@ class catchmentAnalysis(QObject):
 
                 # Add the length of arc to length list in order to ignore duplicates
                 arc_length_list.append(arc_length)
+            i += 1
 
         return output_network
 
@@ -637,7 +642,10 @@ class catchmentAnalysis(QObject):
         # Setup unique origin dictionary containing all distances
         unique_origins_list = []
         polygon_dict = {}
+        i = 1
         for tied_point in catchment_points:
+            self.progress.emit(40 + int(30 * i / len(catchment_points)))
+            if self.killed == True: return
             name = catchment_points[tied_point]['name']
             if name not in unique_origins_list:
                 polygon_dict[name] = {distance: [] for distance in distances}
@@ -648,11 +656,12 @@ class catchmentAnalysis(QObject):
                 if len(points) > 2:  # Only three points can create a polygon
                     hull = self.concave_hull.concave_hull(points, polygon_tolerance)
                     polygon_dict[name][distance].append(hull)
-
+            i += 1
         # Generate the polygons
         index = 1
         hull_validity = True
         for name in polygon_dict:
+            if self.killed == True: return
             if hull_validity:
                 for distance in distances:
                     for hull in polygon_dict[name][distance]: # Later add combine functionality
@@ -682,8 +691,8 @@ class catchmentAnalysis(QObject):
                     self.settings['name']
                 )
                 self.progress.emit(10)
-                # Kill check
                 if self.killed: return
+
                 # Build the graph
                 graph, tied_origins = self.graph_builder(
                     self.settings['network'],
@@ -693,19 +702,19 @@ class catchmentAnalysis(QObject):
                     self.settings['crs'],
                     self.settings['epsg']
                 )
-                self.progress.emit(30)
-                # Kill check
+                self.progress.emit(20)
                 if self.killed: return
-                    # Run the analysis
+
+                # Run the analysis
                 catchment_network, catchment_points = self.graph_analysis(
                     graph,
                     tied_origins,
                     self.settings['distances']
                 )
-                self.progress.emit(50)
-                # Kill check
+                self.progress.emit(40)
                 if self.killed: return
-                    # Write and render the catchment polygons
+
+                # Write and render the catchment polygons
                 if self.settings['output polygon check']:
                     output_polygon = self.polygon_writer(
                         catchment_points,
@@ -716,10 +725,10 @@ class catchmentAnalysis(QObject):
                     if self.settings['output polygon']:
                         uf.createShapeFile(output_polygon, self.settings['output polygon'], self.settings['crs'])
                         output_polygon = QgsVectorLayer(self.settings['output polygon'], 'catchment_areas', 'ogr')
-                self.progress.emit(80)
-                # Kill check
-                if self.killed: return
-                    # Write and render the catchment network
+                self.progress.emit(70)
+                if self.killed == True: return
+
+                # Write and render the catchment network
                 if self.settings['output network check']:
                     output_network = self.network_writer(
                         origins,
@@ -742,3 +751,4 @@ class catchmentAnalysis(QObject):
 
     def kill(self):
         self.killed = True
+

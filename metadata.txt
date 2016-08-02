@@ -10,11 +10,11 @@
 name=Catchment Analyser
 qgisMinimumVersion=2.0
 description=Network based catchment analysis
-version=0.0.1
+version=0.0.2
 author=Laurens Versluis
 email=l.versluis@spacesyntax.com
 
-about=This plugin takes a line-based network and point-based origin layer and calculated the distance from each segment within a given distance or list of distances to each of the origins. The tool outputs the catchment as lines and as a concave hull polygon layer. Credit for the concave hull functionality goes to the algorithm described by Adriano Moreira and Maribel Yasmina Santos.
+about=This plugin takes a line-based network and point-based origin layer and calculated the distance from each segment within a given distance or list of distances to each of the origins. The tool outputs the catchment as lines and as a concave hull polygon layer. Credit for the concave hull functionality goes to the algorithm described by Adriano Moreira and Maribel Yasmina Santos.This plugin was developed by Space Syntax Open Digital Works © 2016 Space Syntax Ltd
 
 tracker=https://github.com/OpenDigitalWorks/CatchmentAnalyser/issues
 repository=https://github.com/OpenDigitalWorks/CatchmentAnalyser
@@ -23,7 +23,8 @@ repository=https://github.com/OpenDigitalWorks/CatchmentAnalyser
 # Recommended items:
 
 # Uncomment the following line and add your changelog:
-changelog=  version 0.0.1 : Initial release
+changelog=  version 0.0.2 : Fixed process cancellation and created a more detailed progress report
+            version 0.0.1 : Initial release
 
 
 # Tags are comma separated with spaces allowed
