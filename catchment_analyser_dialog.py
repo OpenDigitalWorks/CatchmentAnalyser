@@ -47,7 +47,7 @@ class CatchmentAnalyserDialog(QtGui.QDialog, FORM_CLASS):
         self.networkSaveButton.clicked.connect(self.setNetworkOutput)
         self.polygonText.setPlaceholderText("Save as temporary layer...")
         self.polygonSaveButton.clicked.connect(self.setPolygonOutput)
-        self.cancelButton.clicked.connect(self.closeDialog)
+
 
         # Setup the progress bar
         self.analysisProgress.setMinimum(0)
@@ -159,7 +159,7 @@ class CatchmentAnalyserDialog(QtGui.QDialog, FORM_CLASS):
         self.nameCheck.setCheckState(False)
         self.distancesText.clear()
         self.networkTolSpin.setValue(1)
-        self.polygonTolSpin.setValue(50)
+        self.polygonTolSpin.setValue(20)
         self.networkText.clear()
         self.polygonText.clear()
         self.analysisProgress.reset()

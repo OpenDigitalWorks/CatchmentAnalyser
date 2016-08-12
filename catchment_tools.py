@@ -542,7 +542,6 @@ class catchmentAnalysis(QObject):
         i = 1
         for tied_point, origin in enumerate(tied_origins):
             self.progress.emit(20 + int(20 * i / len(tied_origins)))
-            if self.killed == True: return
             origin_name = tied_origins[tied_point]['name']
             originVertexId = graph.findVertex(tied_origins[tied_point]['vertex'])
 
@@ -551,11 +550,12 @@ class catchmentAnalysis(QObject):
 
             # Loop through graph arcs
             for index in range(0, graph.arcCount()):
-
+                if self.killed == True: break
                 # Define the arc properties
                 inVertexId = graph.arc(index).inVertex()
                 outVertexId = graph.arc(index).outVertex()
                 inVertexGeom = graph.vertex(inVertexId).point()
+                outVertexGeom = graph.vertex(outVertexId).point()
                 # outVertexGeom = graph.vertex(outVertexId).point()
                 arcCost = max(cost[outVertexId], cost[inVertexId])
 
@@ -573,8 +573,9 @@ class catchmentAnalysis(QObject):
 
                 # Add catchment points for each given radius
                 for distance in distances:
+                    if self.killed == True: break
                     if arcCost < distance:
-                        catchment_points[tied_point][distance].extend([inVertexGeom, ])
+                        catchment_points[tied_point][distance].extend([inVertexGeom, outVertexGeom])
             i += 1
         return catchment_network, catchment_points
 
@@ -596,7 +597,7 @@ class catchmentAnalysis(QObject):
         i = 1
         for index in catchment_network:
             self.progress.emit(70 + int(30 * i / len(catchment_network)))
-            if self.killed == True: return
+            if self.killed == True: break
             # Get arc properties
             arc_geom = catchment_network[index]['geom']
             arc_length = arc_geom.length()
@@ -644,14 +645,15 @@ class catchmentAnalysis(QObject):
         polygon_dict = {}
         i = 1
         for tied_point in catchment_points:
+            if self.killed: break
             self.progress.emit(40 + int(30 * i / len(catchment_points)))
-            if self.killed == True: return
             name = catchment_points[tied_point]['name']
             if name not in unique_origins_list:
                 polygon_dict[name] = {distance: [] for distance in distances}
                 unique_origins_list.append(name)
             # Creating hull for each distance and if appliclable in a list
             for distance in distances:
+                if self.killed: break
                 points = catchment_points[tied_point][distance]
                 if len(points) > 2:  # Only three points can create a polygon
                     hull = self.concave_hull.concave_hull(points, polygon_tolerance)
@@ -661,10 +663,10 @@ class catchmentAnalysis(QObject):
         index = 1
         hull_validity = True
         for name in polygon_dict:
-            if self.killed == True: return
             if hull_validity:
                 for distance in distances:
                     for hull in polygon_dict[name][distance]: # Later add combine functionality
+                        if self.killed: break
                         # Check if hull is a actual polygon
                         try:
                             p = QgsFeature(output_polygon.pendingFields())
@@ -691,7 +693,7 @@ class catchmentAnalysis(QObject):
                     self.settings['name']
                 )
                 self.progress.emit(10)
-                if self.killed: return
+                if self.killed == True: return
 
                 # Build the graph
                 graph, tied_origins = self.graph_builder(
@@ -703,7 +705,7 @@ class catchmentAnalysis(QObject):
                     self.settings['epsg']
                 )
                 self.progress.emit(20)
-                if self.killed: return
+                if self.killed == True: return
 
                 # Run the analysis
                 catchment_network, catchment_points = self.graph_analysis(
@@ -712,7 +714,7 @@ class catchmentAnalysis(QObject):
                     self.settings['distances']
                 )
                 self.progress.emit(40)
-                if self.killed: return
+                if self.killed == True: return
 
                 # Write and render the catchment polygons
                 if self.settings['output polygon check']:

@@ -84,6 +84,7 @@ class CatchmentAnalyser:
 
         # Create the dialog (after translation) and keep reference
         self.dlg = CatchmentAnalyserDialog()
+        self.analysis = None
         # Declare instance attributes
         self.actions = []
         self.menu = self.tr(u'&Space Syntax Toolkit')
@@ -100,6 +101,7 @@ class CatchmentAnalyser:
         self.dlg.costCheck.stateChanged.connect(self.updateCost)
         self.dlg.nameCheck.stateChanged.connect(self.updateName)
         self.dlg.analysisButton.clicked.connect(self.runAnalysis)
+        self.dlg.cancelButton.clicked.connect(self.killAnalysis)
 
 
 
@@ -336,7 +338,7 @@ class CatchmentAnalyser:
         analysis_thread = QThread()
         analysis.moveToThread(analysis_thread)
         # Setup signals
-        self.dlg.cancelButton.clicked.connect(self.killAnalysis)
+
         analysis.finished.connect(self.analysisFinish)
         analysis.error.connect(self.analysisError)
         analysis.warning.connect(self.giveWarningMessage)
@@ -354,7 +356,6 @@ class CatchmentAnalyser:
         self.analysis_thread.wait()
         self.analysis_thread.deleteLater()
         self.analysis.deleteLater()
-
         # Render output
         if output:
             output_network = output['output network']
@@ -366,7 +367,6 @@ class CatchmentAnalyser:
                 self.renderPolygon(output_polygon)
         else:
             self.giveWarningMessage('Something went wrong')
-
         # Closing the dialog
         self.dlg.closeDialog()
 
@@ -429,13 +429,21 @@ class CatchmentAnalyser:
     def killAnalysis(self):
         # Check if the analysis is running
         if self.analysis:
+            # Disconnect signals
+            self.analysis.finished.disconnect(self.analysisFinish)
+            self.analysis.error.disconnect(self.analysisError)
+            self.analysis.warning.disconnect(self.giveWarningMessage)
+            self.analysis.progress.disconnect(self.dlg.analysisProgress.setValue)
             # Clean up thread and analysis
             self.analysis.kill()
+            self.analysis.deleteLater()
             self.analysis_thread.quit()
             self.analysis_thread.wait()
             self.analysis_thread.deleteLater()
-            self.analysis.deleteLater()
+            self.analysis = None
             # Closing the dialog
+            self.dlg.closeDialog()
+        else:
             self.dlg.closeDialog()
 
     def run(self):

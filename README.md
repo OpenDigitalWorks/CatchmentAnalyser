@@ -5,7 +5,15 @@
 This plugin takes a line-based network and point-based origin layer and calculated the distance from each segment within a given distance or list of distances to each of the origins. The tool outputs the catchment as lines and as a concave hull polygon layer. Credit for the concave hull functionality goes to the algorithm described by Adriano Moreira and Maribel Yasmina Santos.
 
 ## Installation
-The plug-in can be installed from the QGIS Plugins Manager, and updates become automatically available once submitted to the QGIS plugins repository.
+Currently the plugin is not available through the QGIS plugins repository. To install you need to download the latest Plugin.zip file from the releases page (link). Unzip and copy the entire folder into the QGIS plugins directory. This directory can be found here:
+
+* MS Windows: C:\Users\[your user name]\.qgis2\python\plugins\
+* Mac OSX: Users/[your user name]/.qgis2/python/plugins/
+* Linux: home/[your user name]/.qgis2/python/plugins/
+
+This directory is usually hidden and you must make hidden files visible.Under Mac OSX you can open the folder in Finder by selecting 'Go > Go To Folder...' and typing '~/.qgis2/python/plugins/'. If you haven’t installed any QGIS plugins so far, you need to create the ‘plugins’ directory in the ‘.qgis2/python/’ directory. 
+
+After copying the plugin, it will be available in the plugin manager window once you (re)start QGIS. Check the box next to the plugin to load it.
 
 ## How to
 **Network layer**
