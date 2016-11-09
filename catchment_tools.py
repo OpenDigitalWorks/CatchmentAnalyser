@@ -556,7 +556,6 @@ class catchmentAnalysis(QObject):
                 outVertexId = graph.arc(index).outVertex()
                 inVertexGeom = graph.vertex(inVertexId).point()
                 outVertexGeom = graph.vertex(outVertexId).point()
-                # outVertexGeom = graph.vertex(outVertexId).point()
                 arcCost = max(cost[outVertexId], cost[inVertexId])
 
                 # If arc is the origin set cost to 0
@@ -598,20 +597,16 @@ class catchmentAnalysis(QObject):
         for index in catchment_network:
             self.progress.emit(70 + int(30 * i / len(catchment_network)))
             if self.killed == True: break
+
             # Get arc properties
             arc_geom = catchment_network[index]['geom']
             arc_length = arc_geom.length()
             arc_cost_dict = catchment_network[index]['cost']
             arc_cost_list = []
 
-            # Ignore arc if already processed
-            if arc_length in arc_length_list:
+            # Ignore arc if already processed, not connected or outside of catchment
+            if arc_length in arc_length_list or len(arc_cost_dict) == 0:
                 pass
-
-            # Ignore arc is not connected to origins or outside catchment
-            elif not arc_cost_dict:
-                pass
-
             else:
                 # Create feature and write id and geom
                 f = QgsFeature(output_network.pendingFields())
@@ -626,7 +621,7 @@ class catchmentAnalysis(QObject):
                     f.setAttribute("%s" % name, cost)
 
                 # Set minimum cost
-                if arc_cost_list > 0:
+                if len(arc_cost_list) > 0:
                     f.setAttribute('min_dist', min(arc_cost_list))
 
                 # Write feature to output network layer
@@ -634,7 +629,7 @@ class catchmentAnalysis(QObject):
 
                 # Add the length of arc to length list in order to ignore duplicates
                 arc_length_list.append(arc_length)
-            i += 1
+                i += 1
 
         return output_network
 
@@ -716,6 +711,11 @@ class catchmentAnalysis(QObject):
                 self.progress.emit(40)
                 if self.killed == True: return
 
+                # Create output signal
+                output = {'output network': None,
+                          'output polygon': None,
+                          'distances': self.settings['distances']}
+
                 # Write and render the catchment polygons
                 if self.settings['output polygon check']:
                     output_polygon = self.polygon_writer(
@@ -727,6 +727,8 @@ class catchmentAnalysis(QObject):
                     if self.settings['output polygon']:
                         uf.createShapeFile(output_polygon, self.settings['output polygon'], self.settings['crs'])
                         output_polygon = QgsVectorLayer(self.settings['output polygon'], 'catchment_areas', 'ogr')
+                    output['output polygon'] = output_polygon
+
                 self.progress.emit(70)
                 if self.killed == True: return
 
@@ -740,12 +742,10 @@ class catchmentAnalysis(QObject):
                     if self.settings['output network']:
                         uf.createShapeFile(output_network, self.settings['output network'], self.settings['crs'])
                         output_network = QgsVectorLayer(self.settings['output network'], 'catchment_network', 'ogr')
+                    output['output network'] = output_network
 
                 if self.killed is False:
                     self.progress.emit(100)
-                    output = {'output network': output_network,
-                              'output polygon': output_polygon,
-                              'distances': self.settings['distances']}
                     self.finished.emit(output)
 
             except Exception, e:
