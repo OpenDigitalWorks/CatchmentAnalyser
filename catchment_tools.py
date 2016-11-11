@@ -523,20 +523,19 @@ class catchmentAnalysis(QObject):
         catchment_points = {}
 
         # Loop through graph and get geometry and write to catchment network
-        for index in range(0, graph.arcCount()):
+        for index in range(graph.arcCount()):
             inVertexId = graph.arc(index).inVertex()
             outVertexId = graph.arc(index).outVertex()
             inVertexGeom = graph.vertex(inVertexId).point()
             outVertexGeom = graph.vertex(outVertexId).point()
             arcGeom = QgsGeometry.fromPolyline([inVertexGeom, outVertexGeom])
-            catchment_network[index] = {'geom': arcGeom, 'cost': {}}
+            catchment_network[index] = {'geom': arcGeom, 'cost': {} }
 
         # Loop through tied origins and write origin names
         for tied_point, origin in enumerate(tied_origins):
             origin_name = tied_origins[tied_point]['name']
             catchment_points[tied_point] = {'name': origin_name}
             catchment_points[tied_point].update({distance: [] for distance in distances})
-
 
         # Loop through tied origins and write costs and polygon points
         i = 1
@@ -549,7 +548,7 @@ class catchmentAnalysis(QObject):
             (tree, cost) = QgsGraphAnalyzer.dijkstra(graph, originVertexId, 0)
 
             # Loop through graph arcs
-            for index in range(0, graph.arcCount()):
+            for index in range(graph.arcCount()):
                 if self.killed == True: break
                 # Define the arc properties
                 inVertexId = graph.arc(index).inVertex()
@@ -580,7 +579,15 @@ class catchmentAnalysis(QObject):
 
     def network_writer(self, origins, catchment_network, output_network):
         # Variables
-        arc_length_list = []
+        # arc_length_seen = set()
+        # arc_length_uniq = []
+        # for k, v in catchment_network.iteritems():
+        #     geom = v['geom']
+        #     if geom not in arc_length_seen:
+        #         arc_length_uniq.append(geom)
+        #         arc_length_seen.add(geom)
+
+        arc_length_uniq =[]
 
         # Setup all unique origin columns and minimum origin distance column
         unique_origin_list = []
@@ -594,23 +601,24 @@ class catchmentAnalysis(QObject):
 
         # Loop through arcs in catchment network and write geometry and costs
         i = 1
-        for index in catchment_network:
+        for k, v in catchment_network.iteritems():
             self.progress.emit(70 + int(30 * i / len(catchment_network)))
             if self.killed == True: break
 
             # Get arc properties
-            arc_geom = catchment_network[index]['geom']
-            arc_length = arc_geom.length()
-            arc_cost_dict = catchment_network[index]['cost']
+            arc_geom = v['geom']
+            arc_length = abs(arc_geom.length())
+            arc_cost_dict = v['cost']
             arc_cost_list = []
 
             # Ignore arc if already processed, not connected or outside of catchment
-            if arc_length in arc_length_list or len(arc_cost_dict) == 0:
+            if arc_length in arc_length_uniq or len(arc_cost_dict) == 0:
                 pass
             else:
+
                 # Create feature and write id and geom
                 f = QgsFeature(output_network.pendingFields())
-                f.setAttribute("id", index)
+                f.setAttribute("id", k)
                 f.setGeometry(arc_geom)
 
                 # Read the list of costs and write them to output network
@@ -628,8 +636,9 @@ class catchmentAnalysis(QObject):
                 output_network.dataProvider().addFeatures([f])
 
                 # Add the length of arc to length list in order to ignore duplicates
-                arc_length_list.append(arc_length)
-                i += 1
+                arc_length_uniq.append(arc_length)
+
+            i += 1
 
         return output_network
 
