@@ -528,8 +528,8 @@ class catchmentAnalysis(QObject):
             outVertexId = graph.arc(index).outVertex()
             inVertexGeom = graph.vertex(inVertexId).point()
             outVertexGeom = graph.vertex(outVertexId).point()
-            arcGeom = QgsGeometry.fromPolyline([inVertexGeom, outVertexGeom])
-            catchment_network[index] = {'geom': arcGeom, 'cost': {} }
+            arcGeom = QgsGeometry.fromPolyline([outVertexGeom,inVertexGeom])
+            catchment_network[index] = {'geom': arcGeom, 'cost': {}}
 
         # Loop through tied origins and write origin names
         for tied_point, origin in enumerate(tied_origins):
@@ -579,15 +579,15 @@ class catchmentAnalysis(QObject):
 
     def network_writer(self, origins, catchment_network, output_network):
         # Variables
-        # arc_length_seen = set()
-        # arc_length_uniq = []
-        # for k, v in catchment_network.iteritems():
-        #     geom = v['geom']
-        #     if geom not in arc_length_seen:
-        #         arc_length_uniq.append(geom)
-        #         arc_length_seen.add(geom)
+        arc_length_seen = set()
+        arc_length_uniq = []
+        for k, v in catchment_network.iteritems():
+            arc_length = v['geom'].length()
+            if geom not in arc_length_seen:
+                arc_length_uniq.append(arc_length)
+                arc_length_seen.add(arc_length)
 
-        arc_length_uniq =[]
+        # arc_length_uniq =[]
 
         # Setup all unique origin columns and minimum origin distance column
         unique_origin_list = []
@@ -636,7 +636,7 @@ class catchmentAnalysis(QObject):
                 output_network.dataProvider().addFeatures([f])
 
                 # Add the length of arc to length list in order to ignore duplicates
-                arc_length_uniq.append(arc_length)
+                # arc_length_uniq.append(arc_length)
 
             i += 1
 
