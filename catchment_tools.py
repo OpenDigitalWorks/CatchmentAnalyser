@@ -578,16 +578,6 @@ class catchmentAnalysis(QObject):
         return catchment_network, catchment_points
 
     def network_writer(self, origins, catchment_network, output_network):
-        # Variables
-        arc_length_seen = set()
-        arc_length_uniq = []
-        for k, v in catchment_network.iteritems():
-            arc_length = v['geom'].length()
-            if geom not in arc_length_seen:
-                arc_length_uniq.append(arc_length)
-                arc_length_seen.add(arc_length)
-
-        # arc_length_uniq =[]
 
         # Setup all unique origin columns and minimum origin distance column
         unique_origin_list = []
@@ -600,6 +590,7 @@ class catchmentAnalysis(QObject):
         output_network.updateFields()
 
         # Loop through arcs in catchment network and write geometry and costs
+        arc_length_uniq = []
         i = 1
         for k, v in catchment_network.iteritems():
             self.progress.emit(70 + int(30 * i / len(catchment_network)))
@@ -607,15 +598,15 @@ class catchmentAnalysis(QObject):
 
             # Get arc properties
             arc_geom = v['geom']
-            arc_length = abs(arc_geom.length())
             arc_cost_dict = v['cost']
             arc_cost_list = []
 
             # Ignore arc if already processed, not connected or outside of catchment
-            if arc_length in arc_length_uniq or len(arc_cost_dict) == 0:
+            if arc_geom in arc_length_uniq:
+                pass
+            elif len(arc_cost_dict) == 0:
                 pass
             else:
-
                 # Create feature and write id and geom
                 f = QgsFeature(output_network.pendingFields())
                 f.setAttribute("id", k)
@@ -636,7 +627,7 @@ class catchmentAnalysis(QObject):
                 output_network.dataProvider().addFeatures([f])
 
                 # Add the length of arc to length list in order to ignore duplicates
-                # arc_length_uniq.append(arc_length)
+                arc_length_uniq.append(arc_geom)
 
             i += 1
 
