@@ -3,6 +3,3 @@
 .workspace.xml
 *.pyc
 help/
-old/
-test/
-scripts/
