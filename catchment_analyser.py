@@ -36,7 +36,7 @@ from qgis.gui import *
 from qgis.utils import *
 
 # Import tool classes
-import catchment_tools
+import catchment_analysis as ca
 
 # Import utility tools
 import utility_functions as uf
@@ -46,7 +46,7 @@ import utility_functions as uf
 is_debug = True
 try:
     import pydevd
-    has_pydevd = False
+    has_pydevd = True
 except ImportError, e:
     has_pydevd = False
     is_debug = False
@@ -93,7 +93,7 @@ class CatchmentAnalyser:
 
         # Setup debugger
         if has_pydevd and is_debug:
-            pydevd.settrace('localhost', port=53100, stdoutToServer=True, stderrToServer=True, suspend=True)
+            pydevd.settrace('localhost', port=53100, stdoutToServer=True, stderrToServer=True, suspend=False)
 
         # Setup GUI signals
         self.dlg.networkCombo.activated.connect(self.updateCost)
@@ -333,7 +333,7 @@ class CatchmentAnalyser:
         self.dlg.analysisProgress.reset()
         # Create an analysis instance
         settings = self.getAnalysisSettings()
-        analysis = catchment_tools.catchmentAnalysis(self.iface, settings)
+        analysis = ca.CatchmentAnalysis(self.iface, settings)
         # Create new thread and move the analysis class to it
         analysis_thread = QThread()
         analysis.moveToThread(analysis_thread)
