@@ -28,7 +28,7 @@ from qgis.gui import *
 from qgis.networkanalysis import *
 from qgis.utils import *
 
-import catchment_tools as ct
+import analysis_tools as ct
 import utility_functions as uf
 
 try:
@@ -206,7 +206,7 @@ class CatchmentAnalysis(QObject):
             inVertexGeom = graph.vertex(inVertexId).point()
             outVertexGeom = graph.vertex(outVertexId).point()
             arcGeom = QgsGeometry.fromPolyline([outVertexGeom,inVertexGeom])
-            catchment_network[index] = {'geom': arcGeom, 'cost': {}}
+            catchment_network[index] = {'geom': arcGeom, 'inID':inVertexId, 'outID':outVertexId, 'cost': {}}
 
         # Loop through tied origins and write origin names
         for tied_point, origin in enumerate(tied_origins):
@@ -280,9 +280,9 @@ class CatchmentAnalysis(QObject):
 
             # Ignore arc if already processed, not connected or outside of catchment
             if arc_geom in arc_length_uniq:
-                pass
+                continue
             elif len(arc_cost_dict) == 0:
-                pass
+                continue
             else:
                 # Create feature and write id and geom
                 f = QgsFeature(output_network.pendingFields())
