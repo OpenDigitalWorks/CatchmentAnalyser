@@ -47,11 +47,13 @@ class CatchmentAnalyserDialog(QtGui.QDialog, FORM_CLASS):
         self.networkSaveButton.clicked.connect(self.setNetworkOutput)
         self.polygonText.setPlaceholderText("Save as temporary layer...")
         self.polygonSaveButton.clicked.connect(self.setPolygonOutput)
-
+        self.cancelButton.clicked.connect(self.stopRunning)
+        self.analysisButton.clicked.connect(self.setRunning)
 
         # Setup the progress bar
         self.analysisProgress.setMinimum(0)
         self.analysisProgress.setMaximum(100)
+        self.is_running = False
 
     def setNetworkLayers(self, names):
         layers = ['-----']
@@ -61,10 +63,8 @@ class CatchmentAnalyserDialog(QtGui.QDialog, FORM_CLASS):
         self.networkCombo.clear()
         self.networkCombo.addItems(layers)
 
-
     def getNetwork(self):
         return self.networkCombo.currentText()
-
 
     def setCostFields(self, names):
         if self.costCheck.isChecked():
@@ -76,14 +76,12 @@ class CatchmentAnalyserDialog(QtGui.QDialog, FORM_CLASS):
             self.costCombo.clear()
             self.costCombo.addItems(names)
 
-
     def getCostField(self):
         if self.costCheck.isChecked():
             cost_field = self.costCombo.currentText()
         else:
             cost_field = None
         return cost_field
-
 
     def setOriginLayers(self, names):
         layers = ['-----']
@@ -93,10 +91,8 @@ class CatchmentAnalyserDialog(QtGui.QDialog, FORM_CLASS):
         self.originsCombo.clear()
         self.originsCombo.addItems(layers)
 
-
     def getOrigins(self):
         return self.originsCombo.currentText()
-
 
     def setNameFields(self, names):
         if self.nameCheck.isChecked():
@@ -107,48 +103,47 @@ class CatchmentAnalyserDialog(QtGui.QDialog, FORM_CLASS):
             self.nameCombo.clear()
             self.nameCombo.addItems(names)
 
-
     def getName(self):
         return self.nameCombo.currentText()
-
 
     def getDistances(self):
         if self.distancesText.text():
             distances = self.distancesText.text().split(',')
             return distances
 
-
     def getNetworkTolerance(self):
         return self.networkTolSpin.value()
 
-
     def getPolygonTolerance(self):
         return self.polygonTolSpin.value()
-
 
     def setNetworkOutput(self):
         file_name = QtGui.QFileDialog.getSaveFileName(self, "Save output file ", "catchment_network", '*.shp')
         if file_name:
             self.networkText.setText(file_name)
 
-
     def getNetworkOutput(self):
         return self.networkText.text()
-
 
     def setPolygonOutput(self):
         file_name = QtGui.QFileDialog.getSaveFileName(self, "Save output file ", "catchment_polygon", '*.shp')
         if file_name:
             self.polygonText.setText(file_name)
 
-
     def getPolygonOutput(self):
         return self.polygonText.text()
 
+    def setRunning(self):
+        self.is_running = True
+
+    def stopRunning(self):
+        if self.is_running:
+            self.is_running = False
+        else:
+            self.closeDialog()
 
     def closeEvent(self, QCloseEvent):
         self.closeDialog()
-
 
     def closeDialog(self):
         self.costCombo.clear()
