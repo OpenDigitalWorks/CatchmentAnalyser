@@ -31,6 +31,7 @@ from qgis.utils import *
 import analysis_tools as ct
 import utility_functions as uf
 
+is_debug = False
 try:
     import pydevd
     has_pydevd = True
@@ -128,7 +129,7 @@ class CatchmentAnalysis(QObject):
                 self.error.emit(e, traceback.format_exc())
 
     def origin_preparation(self, origin_vector, origin_name_field):
-        if has_pydevd:
+        if has_pydevd and is_debug:
             pydevd.settrace('localhost', port=53100, stdoutToServer=True, stderrToServer=True, suspend=False)
 
         # Create a dictionary of origin point dictionaries containing name and geometry
@@ -206,7 +207,10 @@ class CatchmentAnalysis(QObject):
             inVertexGeom = graph.vertex(inVertexId).point()
             outVertexGeom = graph.vertex(outVertexId).point()
             arcGeom = QgsGeometry.fromPolyline([outVertexGeom,inVertexGeom])
-            catchment_network[index] = {'geom': arcGeom, 'inID':inVertexId, 'outID':outVertexId, 'cost': {}}
+            if inVertexId < outVertexId:
+                catchment_network[index] = {'geom': arcGeom, 'start':inVertexId, 'end':outVertexId, 'cost': {}}
+            else:
+                catchment_network[index] = {'geom': arcGeom, 'start':outVertexId, 'end':inVertexId, 'cost': {}}
 
         # Loop through tied origins and write origin names
         for tied_point, origin in enumerate(tied_origins):
@@ -267,7 +271,7 @@ class CatchmentAnalysis(QObject):
         output_network.updateFields()
 
         # Loop through arcs in catchment network and write geometry and costs
-        arc_length_uniq = []
+        arc_uniq = []
         i = 1
         for k, v in catchment_network.iteritems():
             self.progress.emit(70 + int(30 * i / len(catchment_network)))
@@ -276,10 +280,11 @@ class CatchmentAnalysis(QObject):
             # Get arc properties
             arc_geom = v['geom']
             arc_cost_dict = v['cost']
+            arc_start_end = (v['start'], v['end'])
             arc_cost_list = []
 
             # Ignore arc if already processed, not connected or outside of catchment
-            if arc_geom in arc_length_uniq:
+            if arc_start_end in arc_uniq:
                 continue
             elif len(arc_cost_dict) == 0:
                 continue
@@ -304,7 +309,7 @@ class CatchmentAnalysis(QObject):
                 output_network.dataProvider().addFeatures([f])
 
                 # Add the length of arc to length list in order to ignore duplicates
-                arc_length_uniq.append(arc_geom)
+                arc_uniq.append(arc_start_end)
 
             i += 1
 
