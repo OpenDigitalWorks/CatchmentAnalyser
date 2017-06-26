@@ -24,6 +24,7 @@
 import os
 
 from PyQt4 import QtGui, uic
+from PyQt4.QtCore import *
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'catchment_analyser_dialog_base.ui'))
@@ -42,6 +43,8 @@ class CatchmentAnalyserDialog(QtGui.QDialog, FORM_CLASS):
 
 
         # Output internal GUI signals
+        self.costCheck.stateChanged.connect(self.activateCost)
+        self.nameCheck.stateChanged.connect(self.activateName)
         self.distancesText.setPlaceholderText("Separate with a comma")
         self.networkText.setPlaceholderText("Save as temporary layer...")
         self.networkSaveButton.clicked.connect(self.setNetworkOutput)
@@ -60,21 +63,31 @@ class CatchmentAnalyserDialog(QtGui.QDialog, FORM_CLASS):
         if names:
             layers = []
             layers.extend(names)
+            self.analysisButton.setEnabled(True)
+        else:
+            self.costCheck.setEnabled(False)
+            self.analysisButton.setEnabled(False)
         self.networkCombo.clear()
         self.networkCombo.addItems(layers)
 
     def getNetwork(self):
         return self.networkCombo.currentText()
 
-    def setCostFields(self, names):
+    def activateCost(self):
         if self.costCheck.isChecked():
             self.costCombo.setEnabled(True)
-            fields = ['-----']
-            if names:
-                fields = []
-                fields.extend(names)
-            self.costCombo.clear()
+        else:
+            self.costCombo.setEnabled(False)
+
+    def setCostFields(self, names):
+        self.costCombo.clear()
+        if names:
+            self.costCheck.setEnabled(True)
             self.costCombo.addItems(names)
+        else:
+            self.costCheck.setEnabled(False)
+            fields = ['-----']
+            self.costCombo.addItems(fields)
 
     def getCostField(self):
         if self.costCheck.isChecked():
@@ -88,20 +101,31 @@ class CatchmentAnalyserDialog(QtGui.QDialog, FORM_CLASS):
         if names:
             layers = []
             layers.extend(names)
+            self.analysisButton.setEnabled(True)
+        else:
+            self.nameCheck.setEnabled(False)
+            self.analysisButton.setEnabled(False)
         self.originsCombo.clear()
         self.originsCombo.addItems(layers)
 
     def getOrigins(self):
         return self.originsCombo.currentText()
 
-    def setNameFields(self, names):
+    def activateName(self):
         if self.nameCheck.isChecked():
             self.nameCombo.setEnabled(True)
-            fields = ['-----']
-            if names:
-                fields.extend(names)
-            self.nameCombo.clear()
+        else:
+            self.nameCombo.setEnabled(False)
+
+    def setNameFields(self, names):
+        self.nameCombo.clear()
+        if names:
+            self.nameCheck.setEnabled(True)
             self.nameCombo.addItems(names)
+        else:
+            self.nameCheck.setEnabled(False)
+            fields = ['-----']
+            self.nameCombo.addItems(fields)
 
     def getName(self):
         return self.nameCombo.currentText()

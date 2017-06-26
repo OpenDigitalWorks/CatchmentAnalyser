@@ -53,16 +53,12 @@ class CatchmentTool(QObject):
         # Setup GUI signals
         self.dlg.networkCombo.activated.connect(self.updateCost)
         self.dlg.originsCombo.activated.connect(self.updateName)
-        self.dlg.costCheck.stateChanged.connect(self.updateCost)
-        self.dlg.nameCheck.stateChanged.connect(self.updateName)
         self.dlg.analysisButton.clicked.connect(self.runAnalysis)
         self.dlg.cancelButton.clicked.connect(self.killAnalysis)
 
     def unload_gui(self):
         self.dlg.networkCombo.activated.disconnect(self.updateCost)
         self.dlg.originsCombo.activated.disconnect(self.updateName)
-        self.dlg.costCheck.stateChanged.disconnect(self.updateCost)
-        self.dlg.nameCheck.stateChanged.disconnect(self.updateName)
         self.dlg.analysisButton.clicked.disconnect(self.runAnalysis)
         self.dlg.cancelButton.clicked.disconnect(self.killAnalysis)
 
@@ -73,49 +69,35 @@ class CatchmentTool(QObject):
         # Update layers
         self.updateLayers()
 
-
     def updateLayers(self):
         self.updateNetwork()
         self.updateOrigins()
 
-
     def updateNetwork(self):
-        network_layers = uf.getLegendLayersNames(iface, geom=[1, ], provider='all')
+        network_layers = uf.getLegendLayersNames(self.iface, geom=[1, ], provider='all')
         self.dlg.setNetworkLayers(network_layers)
-        self.updateCost()
-
+        if network_layers:
+            self.updateCost()
 
     def updateOrigins(self):
-        origins_layers = uf.getLegendLayersNames(iface, geom=[0, ], provider='all')
+        origins_layers = uf.getLegendLayersNames(self.iface, geom=[0, ], provider='all')
         self.dlg.setOriginLayers(origins_layers)
-        self.updateName()
-
+        if origins_layers:
+            self.updateName()
 
     def updateCost(self):
-        if self.dlg.costCheck.isChecked():
-            network = self.getNetwork()
-            self.dlg.setCostFields(uf.getNumericFieldNames(network))
-        else:
-            self.dlg.costCombo.clear()
-            self.dlg.costCombo.setEnabled(False)
-
+        network = self.getNetwork()
+        self.dlg.setCostFields(uf.getNumericFieldNames(network))
 
     def updateName(self):
-        if self.dlg.nameCheck.isChecked():
-            origins = self.getOrigins()
-            self.dlg.setNameFields(uf.getFieldNames(origins))
-        else:
-            self.dlg.nameCombo.clear()
-            self.dlg.nameCombo.setEnabled(False)
-
+        origins = self.getOrigins()
+        self.dlg.setNameFields(uf.getFieldNames(origins))
 
     def getNetwork(self):
-        return uf.getLegendLayerByName(iface, self.dlg.getNetwork())
-
+        return uf.getLegendLayerByName(self.iface, self.dlg.getNetwork())
 
     def getOrigins(self):
-        return uf.getLegendLayerByName(iface, self.dlg.getOrigins())
-
+        return uf.getLegendLayerByName(self.iface, self.dlg.getOrigins())
 
     def tempNetwork(self, epsg):
         if self.dlg.networkCheck.isChecked():
