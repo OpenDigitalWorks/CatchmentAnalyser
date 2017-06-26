@@ -376,7 +376,7 @@ class ConcaveHull():
         # step counts the number of segments
         step = 2
 
-        # as long as point_set is not empty or search is returning to the starting point # this is unclear!
+        # as long as point_set is not empty or search is returning to the starting point # use of step is unclear!
         while ((current_point != first_point) or (step == 2)) and (len(point_set) > 0):
 
             # after 3 iterations add the first point to point_set again, otherwise a hull cannot be closed
@@ -410,6 +410,9 @@ class ConcaveHull():
             # there is no candidate to which the connecting line does not intersect any existing segment, so the
             # for the next candidate fails. The algorithm starts again with an increased number of neighbors
             if its is True:
+                # this tries to remove the potentially problematic recursion. might give less optimal results
+                #point_set = self.remove_point(point_set, current_point)
+                #continue
                 return self.concave_hull(points_list, kk + 1)
 
             # the first point which complies with the requirements is added to the hull and gets the current point
