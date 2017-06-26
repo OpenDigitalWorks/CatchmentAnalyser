@@ -31,7 +31,7 @@ from qgis.utils import *
 import analysis_tools as ct
 import utility_functions as uf
 
-is_debug = True
+is_debug = False
 try:
     import pydevd
     has_pydevd = True
