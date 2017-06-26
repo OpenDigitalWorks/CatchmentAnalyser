@@ -31,7 +31,7 @@ from qgis.utils import *
 import analysis_tools as ct
 import utility_functions as uf
 
-is_debug = False
+is_debug = True
 try:
     import pydevd
     has_pydevd = True
@@ -229,13 +229,11 @@ class CatchmentAnalysis(QObject):
             (tree, cost) = QgsGraphAnalyzer.dijkstra(graph, originVertexId, 0)
 
             # Loop through graph arcs
-            for index in range(graph.arcCount()):
+            for index in catchment_network.iterkeys():
                 if self.killed == True: break
                 # Define the arc properties
-                inVertexId = graph.arc(index).inVertex()
-                outVertexId = graph.arc(index).outVertex()
-                inVertexGeom = graph.vertex(inVertexId).point()
-                outVertexGeom = graph.vertex(outVertexId).point()
+                inVertexId = catchment_network[index]['start']
+                outVertexId = catchment_network[index]['end']
                 arcCost = max(cost[outVertexId], cost[inVertexId])
 
                 # If arc is the origin set cost to 0
@@ -250,11 +248,13 @@ class CatchmentAnalysis(QObject):
                     else:
                         catchment_network[index]['cost'][origin_name] = int(arcCost)
 
-                # Add catchment points for each given radius
-                for distance in distances:
-                    if self.killed == True: break
-                    if arcCost < distance:
-                        catchment_points[tied_point][distance].extend([inVertexGeom, outVertexGeom])
+                    # Add catchment points for each given radius
+                    for distance in distances:
+                        if self.killed == True: break
+                        if arcCost < distance:
+                            inVertexGeom = graph.vertex(inVertexId).point()
+                            outVertexGeom = graph.vertex(outVertexId).point()
+                            catchment_points[tied_point][distance].extend([inVertexGeom, outVertexGeom])
             i += 1
         return catchment_network, catchment_points
 
@@ -328,7 +328,7 @@ class CatchmentAnalysis(QObject):
             if name not in unique_origins_list:
                 polygon_dict[name] = {distance: [] for distance in distances}
                 unique_origins_list.append(name)
-            # Creating hull for each distance and if appliclable in a list
+            # Creating hull for each distance and if applicable in a list
             for distance in distances:
                 if self.killed: break
                 points = catchment_points[tied_point][distance]
@@ -340,25 +340,25 @@ class CatchmentAnalysis(QObject):
         index = 1
         hull_validity = True
         for name in polygon_dict:
-            if hull_validity:
-                for distance in distances:
-                    for hull in polygon_dict[name][distance]: # Later add combine functionality
-                        if self.killed: break
-                        # Check if hull is a actual polygon
-                        try:
-                            p = QgsFeature(output_polygon.pendingFields())
-                            p.setAttribute('id', index)
-                            p.setAttribute('origin', name)
-                            p.setAttribute('distance', distance)
-                            polygon_geom = QgsGeometry.fromPolygon([hull,])
-                            p.setGeometry(polygon_geom)
-                            output_polygon.dataProvider().addFeatures([p])
-                            index += 1
-                        except TypeError:
-                            hull_validity = False
-                            self.warning.emit('Polygon tolerance too high for cost band')
-                            break
-
+            for distance in distances:
+                for hull in polygon_dict[name][distance]: # Later add combine functionality
+                    if self.killed: break
+                    # Check if hull is a actual polygon
+                    try:
+                        polygon_geom = QgsGeometry.fromPolygon([hull,])
+                    except TypeError:
+                        hull_validity = False
+                        continue
+                    if polygon_geom:
+                        p = QgsFeature(output_polygon.pendingFields())
+                        p.setAttribute('id', index)
+                        p.setAttribute('origin', name)
+                        p.setAttribute('distance', distance)
+                        p.setGeometry(polygon_geom)
+                        output_polygon.dataProvider().addFeatures([p])
+                        index += 1
+        if hull_validity == False:
+            self.warning.emit('Polygon tolerance too high for small cost bands.')
         return output_polygon
 
     def kill(self):

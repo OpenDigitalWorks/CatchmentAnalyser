@@ -135,19 +135,23 @@ class ConcaveHull():
         :param angle2: float
         :return: float; between 0 and 2*Pi
         """
-        if (angle1 > 0 and angle2 >= 0) and angle1 > angle2:
-            return abs(angle1 - angle2)
-        elif (angle1 >= 0 and angle2 > 0) and angle1 < angle2:
-            return 2 * math.pi + angle1 - angle2
-        elif (angle1 < 0 and angle2 <= 0) and angle1 < angle2:
-            return 2 * math.pi + angle1 + abs(angle2)
-        elif (angle1 <= 0 and angle2 < 0) and angle1 > angle2:
-            return abs(angle1 - angle2)
-        elif angle1 <= 0 < angle2:
-            return 2 * math.pi + angle1 - angle2
-        elif angle1 >= 0 >= angle2:
-            return angle1 + abs(angle2)
-        else:
+        try:
+            if (angle1 > 0 and angle2 >= 0) and angle1 > angle2:
+                return abs(angle1 - angle2)
+            elif (angle1 >= 0 and angle2 > 0) and angle1 < angle2:
+                return 2 * math.pi + angle1 - angle2
+            elif (angle1 < 0 and angle2 <= 0) and angle1 < angle2:
+                return 2 * math.pi + angle1 + abs(angle2)
+            elif (angle1 <= 0 and angle2 < 0) and angle1 > angle2:
+                return abs(angle1 - angle2)
+            elif angle1 <= 0 < angle2:
+                return 2 * math.pi + angle1 - angle2
+            elif angle1 >= 0 >= angle2:
+                return angle1 + abs(angle2)
+            else:
+                return 0
+        except:
+            print ('fail %s, %s', angle1, angle2)
             return 0
 
     def intersect(self, line1, line2):
@@ -372,8 +376,8 @@ class ConcaveHull():
         # step counts the number of segments
         step = 2
 
-        # as long as point_set is not empty or search is returning to the starting point
-        while (current_point != first_point) or (step == 2) and (len(point_set) > 0):
+        # as long as point_set is not empty or search is returning to the starting point # this is unclear!
+        while ((current_point != first_point) or (step == 2)) and (len(point_set) > 0):
 
             # after 3 iterations add the first point to point_set again, otherwise a hull cannot be closed
             if step == 5:
