@@ -39,18 +39,14 @@ class CustomCost(QgsArcProperter):
         self.default_value = defaultValue
 
     def property(self, distance, feature):
-        if not feature.attributes()[self.cost_column_index]:
+        cost = float(feature.attributes()[self.cost_column_index])
+        if not cost or cost <= 0.0:
             return self.default_value
         else:
-            cost = float(feature.attributes()[self.cost_column_index])
-            if cost <= 0.0:
-                return self.default_value
-        return cost
+            return cost
 
     def requiredAttributes(self):
-        l = []
-        l.append(self.cost_column_index);
-        return l
+        return [self.cost_column_index]
 
 
 class ConcaveHull():

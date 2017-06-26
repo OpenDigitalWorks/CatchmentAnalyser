@@ -41,7 +41,6 @@ class CatchmentAnalyserDialog(QtGui.QDialog, FORM_CLASS):
         # #widgets-and-dialogs-with-auto-connect
         self.setupUi(self)
 
-
         # Output internal GUI signals
         self.costCheck.stateChanged.connect(self.activateCost)
         self.nameCheck.stateChanged.connect(self.activateName)
@@ -57,6 +56,11 @@ class CatchmentAnalyserDialog(QtGui.QDialog, FORM_CLASS):
         self.analysisProgress.setMinimum(0)
         self.analysisProgress.setMaximum(100)
         self.is_running = False
+
+        # deactivate custom cost
+        self.costCheck.setEnabled(False)
+        self.costCheck.hide()
+        self.costCombo.hide()
 
     def setNetworkLayers(self, names):
         layers = ['-----']
@@ -82,7 +86,7 @@ class CatchmentAnalyserDialog(QtGui.QDialog, FORM_CLASS):
     def setCostFields(self, names):
         self.costCombo.clear()
         if names:
-            self.costCheck.setEnabled(True)
+            #self.costCheck.setEnabled(True)
             self.costCombo.addItems(names)
         else:
             self.costCheck.setEnabled(False)

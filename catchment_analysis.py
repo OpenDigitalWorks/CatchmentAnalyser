@@ -162,7 +162,7 @@ class CatchmentAnalysis(QObject):
 
         # Determining cost calculation
         if cost_field:
-            properter = ct.CustomCost(network_cost_index, 0)
+            properter = ct.CustomCost(network_cost_index, 0.01)
         else:
             properter = QgsDistanceArcProperter()
 
