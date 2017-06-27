@@ -232,14 +232,21 @@ class CatchmentAnalysis(QObject):
                 # Define the arc properties
                 inVertexId = catchment_network[index]['start']
                 outVertexId = catchment_network[index]['end']
-                arcCost = max(cost[outVertexId], cost[inVertexId])
+                inVertexCost = cost[inVertexId]
+                outVertexCost = cost[outVertexId]
+                # this is the permissive option gives cost to the arc based on the closest point,
+                # it just needs to be reach by one node
+                arcCost = min(inVertexCost, outVertexCost)
+                # this is the restrictive option, gives cost to the arc based on the furtherst point,
+                # it needs to be entirely within distance
+                #arcCost = max(inVertexCost, outVertexCost)
 
                 # If arc is the origin set cost to 0
                 if outVertexId == originVertexId or inVertexId == originVertexId:
                     catchment_network[index]['cost'][origin_name] = 0
 
                 # If arc is connected and within the maximum radius set cost
-                elif arcCost < catchment_threshold and tree[inVertexId] != -1:
+                elif arcCost <= catchment_threshold and tree[inVertexId] != -1:
                     if origin_name in catchment_network[index]['cost']:
                         if catchment_network[index]['cost'][origin_name] > int(arcCost):
                             catchment_network[index]['cost'][origin_name] = int(arcCost)
@@ -249,10 +256,20 @@ class CatchmentAnalysis(QObject):
                     # Add catchment points for each given radius
                     for distance in distances:
                         if self.killed == True: break
-                        if arcCost < distance:
+                        # this option includes both nodes as long as arc is within distance
+                        # the polygon is the same as the network output
+                        if arcCost <= distance:
                             inVertexGeom = graph.vertex(inVertexId).point()
                             outVertexGeom = graph.vertex(outVertexId).point()
                             catchment_points[tied_point][distance].extend([inVertexGeom, outVertexGeom])
+                        # this option only includes nodes within distance
+                        # the polygon can be more restrictive than the network output
+                        #if inVertexCost <= distance:
+                        #    inVertexGeom = graph.vertex(inVertexId).point()
+                        #    catchment_points[tied_point][distance].append(inVertexGeom)
+                        #if outVertexCost <= distance:
+                        #    outVertexGeom = graph.vertex(outVertexId).point()
+                        #    catchment_points[tied_point][distance].append(outVertexGeom)
             i += 1
         return catchment_network, catchment_points
 
