@@ -20,6 +20,7 @@ After copying the plugin, it will be available in the plugin manager window once
 Choose the line-based vector layer that comprises a topological network you want to analyse. The vector layer needs to have a projected CRS. Vector layers with a geographic CRS are ignored.
 
 **Custom cost** 
+(Currently deactivated)
 By default the tool will generate catchments based on the length of the network segments. If you want to apply a custom cost for time-based catchments for example please check the 'Custom cost' checkbox. If checked, choose the field of the network layer which contains the cost information from the drop-down menu. Costs need to be numerical.
 
 **Origin layer**
@@ -38,7 +39,7 @@ The Catchment Analyser tool creates concave hull polygons describing the catchme
 The tool provides a catchment network output based on the original network layer with cost information on every origin. If checked the tool will generate the network as a temporary layer or as a shapefile using the browse button. By default the output network is renderer using the cost to the nearest origin.
 
 **Catchment polygon**: 
-The tool provides a catchment polygon output for each origin and each specified cost. If checked the tool will generate the polygons as a temporary layer or as a shapefile using the browse button. By default the output polygons are rendered as grey opaque areas. 
+The tool provides a catchment polygon output for each origin and each specified cost. If checked the tool will generate the polygons as a temporary layer or as a shapefile using the browse button. By default the output polygons are rendered as grey translucent areas. 
 
 **Run**: 
 Pressing the run button will activate the analysis for all the current settings.
