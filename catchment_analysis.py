@@ -31,7 +31,7 @@ from qgis.utils import *
 import analysis_tools as ct
 import utility_functions as uf
 
-is_debug = False
+is_debug = True
 try:
     import pydevd
     has_pydevd = True
@@ -206,8 +206,9 @@ class CatchmentAnalysis(QObject):
             outVertexId = graph.arc(index).outVertex()
             inVertexGeom = graph.vertex(inVertexId).point()
             outVertexGeom = graph.vertex(outVertexId).point()
-            arcGeom = QgsGeometry.fromPolyline([outVertexGeom,inVertexGeom])
+            # only include one of the two possible arcs
             if inVertexId < outVertexId:
+                arcGeom = QgsGeometry.fromPolyline([inVertexGeom, outVertexGeom])
                 catchment_network[index] = {'geom': arcGeom, 'start':inVertexId, 'end':outVertexId, 'cost': {}}
 
         # Loop through tied origins and write origin names
@@ -254,22 +255,33 @@ class CatchmentAnalysis(QObject):
                         catchment_network[index]['cost'][origin_name] = int(arcCost)
 
                     # Add catchment points for each given radius
+                    inVertexGeom = graph.vertex(inVertexId).point()
+                    outVertexGeom = graph.vertex(outVertexId).point()
+                    seg_length = catchment_network[index]['geom'].length() #  math.sqrt(inVertexGeom.sqrDist(outVertexGeom))
+                    target_dist = 0
                     for distance in distances:
                         if self.killed == True: break
                         # this option includes both nodes as long as arc is within distance
                         # the polygon is the same as the network output
-                        if arcCost <= distance:
-                            inVertexGeom = graph.vertex(inVertexId).point()
-                            outVertexGeom = graph.vertex(outVertexId).point()
-                            catchment_points[tied_point][distance].extend([inVertexGeom, outVertexGeom])
+                        #if arcCost <= distance:
+                        #    catchment_points[tied_point][distance].extend([inVertexGeom, outVertexGeom])
                         # this option only includes nodes within distance
-                        # the polygon can be more restrictive than the network output
-                        #if inVertexCost <= distance:
-                        #    inVertexGeom = graph.vertex(inVertexId).point()
-                        #    catchment_points[tied_point][distance].append(inVertexGeom)
-                        #if outVertexCost <= distance:
-                        #    outVertexGeom = graph.vertex(outVertexId).point()
-                        #    catchment_points[tied_point][distance].append(outVertexGeom)
+                        # it does linear interpolation for extra points
+                        if inVertexCost <= distance:
+                            catchment_points[tied_point][distance].append(inVertexGeom)
+                            # add an extra point with linear referencing
+                            if outVertexCost > distance:
+                                target_dist = distance - inVertexCost
+                                midVertexGeom = catchment_network[index]['geom'].interpolate(target_dist).asPoint()
+                                catchment_points[tied_point][distance].append(midVertexGeom)
+                        if outVertexCost <= distance:
+                            catchment_points[tied_point][distance].append(outVertexGeom)
+                            # add an extra point with linear referencing
+                            if inVertexCost > distance:
+                                target_dist = distance - outVertexCost
+                                midVertexGeom = catchment_network[index]['geom'].interpolate(seg_length-target_dist).asPoint()
+                                catchment_points[tied_point][distance].append(midVertexGeom)
+
             i += 1
         return catchment_network, catchment_points
 
