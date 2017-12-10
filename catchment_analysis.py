@@ -290,7 +290,7 @@ class CatchmentAnalysis(QObject):
         # Setup all unique origin columns and minimum origin distance column
         unique_origin_list = []
         for origin in origins:
-            name = origin['name']
+            name = str(origin['name'])
             if not name in unique_origin_list:
                 output_network.dataProvider().addAttributes([QgsField("%s" % name, QVariant.Int)])
                 unique_origin_list.append(name)

@@ -117,7 +117,7 @@ class CatchmentTool(QObject):
                 'MULTIPOLYGON',
                 epsg,
                 ['id', 'origin', 'distance'],
-                [QVariant.Int, QVariant.Int, QVariant.Int]
+                [QVariant.Int, QVariant.String, QVariant.Int]
             )
             return output_polygon
 
