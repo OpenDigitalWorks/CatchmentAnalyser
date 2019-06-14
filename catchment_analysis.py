@@ -103,7 +103,7 @@ class CatchmentAnalysis(QObject):
                         self.settings['temp polygon'],
                         self.settings['polygon tolerance']
                     )
-                    if self.settings['output polygon']:
+                    if self.settings['output polygon check']:
                         uf.createShapeFile(output_polygon, self.settings['output polygon'], self.settings['crs'])
                         output_polygon = QgsVectorLayer(self.settings['output polygon'], 'catchment_areas', 'ogr')
                     output['output polygon'] = output_polygon

@@ -42,13 +42,10 @@ class CatchmentAnalyserDialog(QtGui.QDialog, FORM_CLASS):
         self.setupUi(self)
 
         # Output internal GUI signals
-        self.costCheck.stateChanged.connect(self.activateCost)
         self.nameCheck.stateChanged.connect(self.activateName)
         self.distancesText.setPlaceholderText("Separate with a comma")
         self.networkText.setPlaceholderText("Save as temporary layer...")
         self.networkSaveButton.clicked.connect(self.setNetworkOutput)
-        self.polygonText.setPlaceholderText("Save as temporary layer...")
-        self.polygonSaveButton.clicked.connect(self.setPolygonOutput)
         self.cancelButton.clicked.connect(self.stopRunning)
         self.analysisButton.clicked.connect(self.setRunning)
 
@@ -57,10 +54,6 @@ class CatchmentAnalyserDialog(QtGui.QDialog, FORM_CLASS):
         self.analysisProgress.setMaximum(100)
         self.is_running = False
 
-        # deactivate custom cost
-        self.costCheck.setEnabled(False)
-        self.costCheck.hide()
-        self.costCombo.hide()
 
     def setNetworkLayers(self, names):
         layers = ['-----']
@@ -69,7 +62,6 @@ class CatchmentAnalyserDialog(QtGui.QDialog, FORM_CLASS):
             layers.extend(names)
             self.analysisButton.setEnabled(True)
         else:
-            self.costCheck.setEnabled(False)
             self.analysisButton.setEnabled(False)
         self.networkCombo.clear()
         self.networkCombo.addItems(layers)
@@ -77,27 +69,20 @@ class CatchmentAnalyserDialog(QtGui.QDialog, FORM_CLASS):
     def getNetwork(self):
         return self.networkCombo.currentText()
 
-    def activateCost(self):
-        if self.costCheck.isChecked():
-            self.costCombo.setEnabled(True)
-        else:
-            self.costCombo.setEnabled(False)
-
     def setCostFields(self, names):
         self.costCombo.clear()
         if names:
             #self.costCheck.setEnabled(True)
             self.costCombo.addItems(names)
         else:
-            self.costCheck.setEnabled(False)
             fields = ['-----']
             self.costCombo.addItems(fields)
 
     def getCostField(self):
-        if self.costCheck.isChecked():
-            cost_field = self.costCombo.currentText()
-        else:
+        if self.costCombo.currentText() == '':
             cost_field = None
+        else:
+            cost_field = self.costCombo.currentText()
         return cost_field
 
     def setOriginLayers(self, names):
@@ -153,14 +138,6 @@ class CatchmentAnalyserDialog(QtGui.QDialog, FORM_CLASS):
     def getNetworkOutput(self):
         return self.networkText.text()
 
-    def setPolygonOutput(self):
-        file_name = QtGui.QFileDialog.getSaveFileName(self, "Save output file ", "catchment_polygon", '*.shp')
-        if file_name:
-            self.polygonText.setText(file_name)
-
-    def getPolygonOutput(self):
-        return self.polygonText.text()
-
     def setRunning(self):
         self.is_running = True
 
@@ -175,8 +152,7 @@ class CatchmentAnalyserDialog(QtGui.QDialog, FORM_CLASS):
 
     def closeDialog(self):
         self.costCombo.clear()
-        self.costCombo.setEnabled(False)
-        self.costCheck.setCheckState(False)
+        self.costCombo.setEnabled(True)
         self.nameCombo.clear()
         self.nameCombo.setEnabled(False)
         self.nameCheck.setCheckState(False)
@@ -184,7 +160,6 @@ class CatchmentAnalyserDialog(QtGui.QDialog, FORM_CLASS):
         self.networkTolSpin.setValue(1)
         self.polygonTolSpin.setValue(20)
         self.networkText.clear()
-        self.polygonText.clear()
         self.analysisProgress.reset()
         self.close()
 

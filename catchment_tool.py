@@ -165,7 +165,6 @@ class CatchmentTool(QObject):
             settings['output network check'] = self.dlg.networkCheck.isChecked()
             settings['output network'] = self.dlg.getNetworkOutput()
             settings['output polygon check'] = self.dlg.polygonCheck.isChecked()
-            settings['output polygon'] = self.dlg.getPolygonOutput()
 
             return settings
 
