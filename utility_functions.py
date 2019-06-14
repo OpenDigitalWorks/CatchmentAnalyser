@@ -59,6 +59,14 @@ def getLegendLayerByName(iface, name):
             layer = i
     return layer
 
+
+def getLayerByName(name):
+    layer = None
+    for i in QgsMapLayerRegistry.instance().mapLayers().values():
+        if i.name() == name:
+            layer = i
+    return layer
+
 def getNumericFieldNames(layer, type='all'):
     field_names = []
     if type == 'all':

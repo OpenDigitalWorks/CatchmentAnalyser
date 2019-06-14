@@ -28,8 +28,14 @@ from qgis.gui import *
 from qgis.networkanalysis import *
 from qgis.utils import *
 
-import analysis_tools as ct
-import utility_functions as uf
+try:
+    import analysis_tools as ct
+except ImportError:
+    pass
+try:
+    import utility_functions as uf
+except ImportError:
+    pass
 
 is_debug = False
 try:
@@ -161,7 +167,7 @@ class CatchmentAnalysis(QObject):
         director = QgsLineVectorLayerDirector(network, -1, '', '', '', 3)
 
         # Determining cost calculation
-        if cost_field:
+        if False: #cost_field:
             properter = ct.CustomCost(network_cost_index, 0.01)
         else:
             properter = QgsDistanceArcProperter()
