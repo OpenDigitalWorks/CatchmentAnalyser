@@ -73,9 +73,10 @@ class CatchmentAnalyserDialog(QtGui.QDialog, FORM_CLASS):
         self.costCombo.clear()
         if names:
             #self.costCheck.setEnabled(True)
-            self.costCombo.addItems(names)
+            self.costCombo.addItems(['length'] + names)
         else:
             fields = ['-----']
+            self.costCombo.addItems('length')
             self.costCombo.addItems(fields)
 
     def getCostField(self):
@@ -117,7 +118,10 @@ class CatchmentAnalyserDialog(QtGui.QDialog, FORM_CLASS):
             self.nameCombo.addItems(fields)
 
     def getName(self):
-        return self.nameCombo.currentText()
+        if self.nameCheck.isChecked():
+            return self.nameCombo.currentText()
+        else:
+            return None
 
     def getDistances(self):
         if self.distancesText.text():
