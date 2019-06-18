@@ -199,25 +199,33 @@ class CatchmentAnalysis(QObject):
         self.spIndex = QgsSpatialIndex()
         self.indices = {}
         self.attributes_dict = {}
+        self.centroids = {}
+        i = 0
         for f in network.getFeatures():
             if f.geometry().wkbType() == 2:
                 self.attributes_dict [f.id()] = f.attributes()
                 polyline = f.geometry().asPolyline()
-                for idx, i in enumerate(polyline[1:]):
-                    ml = QgsGeometry.fromPolyline([polyline[idx], i])
-                    f = QgsFeature()
-                    f.setGeometry(ml.centroid())
-                    f.setAttributes([f.id()])
-                    self.spIndex.insertFeature(f)
+                for idx, p in enumerate(polyline[1:]):
+                    ml = QgsGeometry.fromPolyline([polyline[idx], p])
+                    new_f = QgsFeature()
+                    new_f.setGeometry(ml.centroid())
+                    new_f.setAttributes([f.id()])
+                    new_f.setFeatureId(i)
+                    i += 1
+                    self.spIndex.insertFeature(new_f)
+                    self.centroids[i] = f.id()
             elif f.geometry().wkbType() == 5:
                 self.attributes_dict[f.id()] = f.attributes()
                 for pl in f.geometry().asMultiPolyline():
                     for idx, p in enumerate(pl[1:]):
                         ml = QgsGeometry.fromPolyline([pl[idx], p])
-                        f = QgsFeature()
-                        f.setGeometry(ml.centroid())
-                        f.setAttributes([f.id()])
-                        self.spIndex.insertFeature(f)
+                        new_f = QgsFeature()
+                        new_f.setGeometry(ml.centroid())
+                        new_f.setAttributes([f.id()])
+                        new_f.setFeatureId(i)
+                        self.spIndex.insertFeature(new_f)
+                        self.centroids[i] = f.id()
+                        i += 1
 
         self.network_fields = network_fields
         return graph, tied_origins
@@ -338,18 +346,14 @@ class CatchmentAnalysis(QObject):
             # Get arc properties
             arc_geom = v['geom']
             arc_cost_dict = { str(key):value for key, value in v['cost'].items()}
-            QgsMessageLog.logMessage('snap  %s' % arc_cost_dict, level=QgsMessageLog.CRITICAL)
-            QgsMessageLog.logMessage('snap  %s' % unique_origin_list, level=QgsMessageLog.CRITICAL)
-            #arc_cost_list = []
 
             # Ignore arc if not connected or outside of catchment
             if len(arc_cost_dict) > 0:
                 # Create feature and write id and geom
                 f = QgsFeature()
-
-                # f.setAttribute("id", self.indices[arc_geom.centroid().asPoint()])
                 # get original feature attributes
-                original_feature_id = self.spIndex.nearestNeighbor(arc_geom.centroid().asPoint(), 1).pop()
+                centroid_match = self.spIndex.nearestNeighbor(arc_geom.centroid().asPoint(), 1).pop()
+                original_feature_id = self.centroids[centroid_match]
                 f_attrs = self.attributes_dict[original_feature_id]
                 arc_cost_list = [arc_cost_dict[str(name)] for name in unique_origin_list]
                 if use_name:
