@@ -26,12 +26,14 @@ import os
 from PyQt4 import QtGui, uic
 from PyQt4.QtCore import *
 
+from DbSettings_dialog import DbSettingsDialog
+
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'catchment_analyser_dialog_base.ui'))
 
 
 class CatchmentAnalyserDialog(QtGui.QDialog, FORM_CLASS):
-    def __init__(self, parent=None):
+    def __init__(self, available_dbs, parent=None):
         """Constructor."""
         super(CatchmentAnalyserDialog, self).__init__(parent)
         # Set up the user interface from Designer.
@@ -44,16 +46,84 @@ class CatchmentAnalyserDialog(QtGui.QDialog, FORM_CLASS):
         # Output internal GUI signals
         self.nameCheck.stateChanged.connect(self.activateName)
         self.distancesText.setPlaceholderText("Separate with a comma")
-        self.networkText.setPlaceholderText("Save as temporary layer...")
-        self.networkSaveButton.clicked.connect(self.setNetworkOutput)
+        # TODO: self.networkText.setPlaceholderText("Save as temporary layer...")
+        self.networkSaveButton.clicked.connect(self.setOutput)
         self.cancelButton.clicked.connect(self.stopRunning)
         self.analysisButton.clicked.connect(self.setRunning)
+
+        self.memoryRadioButton.setChecked(True)
 
         # Setup the progress bar
         self.analysisProgress.setMinimum(0)
         self.analysisProgress.setMaximum(100)
         self.is_running = False
 
+        if available_dbs:
+            pass
+        else:
+            available_dbs = {}
+        self.postgisRadioButton.setDisabled(False)
+
+        # initialise nut do not connect to popschemas
+        self.dbsettings_dlg = DbSettingsDialog(available_dbs)
+        self.postgisRadioButton.clicked.connect(self.setDbOutput)
+        self.dbsettings_dlg.dbCombo.currentIndexChanged.connect(self.setDbPath)
+        self.dbsettings_dlg.schemaCombo.currentIndexChanged.connect(self.setDbPath)
+        self.dbsettings_dlg.nameLineEdit.textChanged.connect(self.setDbPath)
+        self.memoryRadioButton.clicked.connect(self.setTempOutput)
+        self.setTempOutput()
+        self.shpRadioButton.clicked.connect(self.setShpOutput)
+        self.networkText.setDisabled(True)
+
+    def setOutput(self):
+        if self.shpRadioButton.isChecked():
+            self.file_name = QtGui.QFileDialog.getSaveFileName(self, "Save output file ", self.getNetwork() + "_catchment", '*.shp')
+            if self.file_name:
+                self.networkText.setText(self.file_name)
+            else:
+                self.networkText.clear()
+        elif self.postgisRadioButton.isChecked():
+            self.dbsettings_dlg.show()
+            # Run the dialog event loop
+            result2 = self.dbsettings_dlg.exec_()
+            self.dbsettings = self.dbsettings_dlg.getDbSettings()
+        return
+
+    def setDbOutput(self):
+        self.disable_browse()
+        if self.postgisRadioButton.isChecked():
+            self.networkText.clear()
+            self.networkText.setDisabled(True)
+
+    def setDbPath(self):
+        if self.postgisRadioButton.isChecked():
+            try:
+                self.dbsettings = self.dbsettings_dlg.getDbSettings()
+                db_layer_name = "%s:%s:%s" % (
+                self.dbsettings['dbname'], self.dbsettings['schema'], self.dbsettings['table_name'])
+                self.networkText.setText(db_layer_name)
+            except:
+                self.networkText.clear()
+
+    def setShpOutput(self):
+        self.disable_browse()
+        try:
+            self.networkText.setText(self.file_name)
+        except :
+            self.networkText.clear()
+        self.networkText.setDisabled(True)
+
+    def disable_browse(self):
+        if self.memoryRadioButton.isChecked():
+            self.networkSaveButton.setDisabled(True)
+        else:
+            self.networkSaveButton.setDisabled(False)
+
+    def setTempOutput(self):
+        self.disable_browse()
+        temp_name = self.getNetwork() + "_catchment"
+        self.networkText.setText(temp_name)
+        self.networkText.setDisabled(False)
 
     def setNetworkLayers(self, names):
         layers = ['-----']
@@ -150,6 +220,33 @@ class CatchmentAnalyserDialog(QtGui.QDialog, FORM_CLASS):
             self.is_running = False
         else:
             self.closeDialog()
+
+    def getOutput(self):
+        if self.shpRadioButton.isChecked():
+            shp_path = self.networkText.text()
+            return shp_path, shp_path[:-4] + "_polygons.shp"
+        elif self.postgisRadioButton.isChecked():
+            try:
+                database, schema, table_name = self.networkText.text().split(':')
+                db_path = self.dbsettings_dlg.connstring, schema, table_name
+                db_path_u = list(db_path)
+                db_path_u[2] = db_path_u[2] + '_polygons'
+                return db_path, tuple(db_path_u)
+            except ValueError:
+                return '', ''
+        else:
+            temp_name = self.networkText.text()
+            return temp_name, temp_name + '_polygons'
+
+    def get_output_type(self):
+        if self.shpRadioButton.isChecked():
+            return 'shapefile'
+        elif self.postgisRadioButton.isChecked():
+            return 'postgis'
+        else:
+            return 'memory'
+
+
 
     def closeEvent(self, QCloseEvent):
         self.closeDialog()
