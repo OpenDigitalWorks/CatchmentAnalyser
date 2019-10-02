@@ -344,7 +344,7 @@ class CatchmentAnalysis(QObject):
         if use_name:
             self.names = [str(origin['name']) for origin in origins]
             for n in self.names:
-                self.network_fields.append(QgsField(n, QVariant.String))
+                self.network_fields.append(QgsField(n, QVariant.Int))
         else:
             self.names = range(0, len(origins))
 
@@ -356,6 +356,7 @@ class CatchmentAnalysis(QObject):
 
         # Loop through arcs in catchment network and write geometry and costs
         i = 0
+        #features = []
         for k, v in catchment_network.iteritems():
             self.progress.emit(70 + int(30 * i / len(catchment_network)))
 
@@ -391,6 +392,7 @@ class CatchmentAnalysis(QObject):
                 f.setGeometry(arc_geom)
 
                 # Write feature to output network layer
+                #features.append(f)
                 output_network.dataProvider().addFeatures([f])
 
             i += 1

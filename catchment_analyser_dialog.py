@@ -221,6 +221,29 @@ class CatchmentAnalyserDialog(QtGui.QDialog, FORM_CLASS):
         else:
             self.closeDialog()
 
+    def lockGUI(self, onoff):
+
+        self.networkCombo.setDisabled(onoff)
+        self.costCombo.setDisabled(onoff)
+        self.originsCombo.setDisabled(onoff)
+        self.nameCheck.setDisabled(onoff)
+
+        self.distancesText.setDisabled(onoff)
+        self.networkTolSpin.setDisabled(onoff)
+        self.polygonTolSpin.setDisabled(onoff)
+
+        self.memoryRadioButton.setDisabled(onoff)
+        self.shpRadioButton.setDisabled(onoff)
+        self.postgisRadioButton.setDisabled(onoff)
+
+        self.networkText.setDisabled(onoff)
+        self.networkSaveButton.setDisabled(onoff)
+
+        self.polygonCheck.setDisabled(onoff)
+        self.analysisButton.setDisabled(onoff)
+
+        return
+
     def getOutput(self):
         if self.shpRadioButton.isChecked():
             shp_path = self.networkText.text()

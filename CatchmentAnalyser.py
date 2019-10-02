@@ -62,6 +62,12 @@ class CatchmentTool(QObject):
             self.dlg.dbsettings_dlg.nameLineEdit.setText(self.dlg.networkCombo.currentText() + "_catchment")
         self.dlg.networkCombo.currentIndexChanged.connect(self.updateOutputName)
 
+    def load_gui(self):
+        # Update layers
+        self.updateLayers()
+        # Show the dialog
+        self.dlg.show()
+
     def unload_gui(self):
         self.dlg.networkCombo.activated.disconnect(self.updateCost)
         self.dlg.originsCombo.activated.disconnect(self.updateName)
@@ -212,6 +218,7 @@ class CatchmentTool(QObject):
         settings = self.getAnalysisSettings()
         analysis = ca.CatchmentAnalysis(self.iface, settings)
         # Create new thread and move the analysis class to it
+        self.dlg.lockGUI(True)
         analysis_thread = QThread()
         analysis.moveToThread(analysis_thread)
         # Setup signals
@@ -229,6 +236,7 @@ class CatchmentTool(QObject):
 
     def analysisFinish(self, output):
         # Render output
+        self.dlg.lockGUI(False)
         if output:
             output_network = output['output network']
             output_polygon = output['output polygon']
